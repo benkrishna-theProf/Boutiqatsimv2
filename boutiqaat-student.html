@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boutiqaat: The Influence Game</title>
+<style>
+:root{
+  --ink:#0E1726; --ink-2:#1D2A3D; --page:#E9ECF1; --panel:#FFFFFF; --line:#D3D9E3;
+  --accent:#F4511E; --accent-d:#C23B10; --accent-soft:#FDEDE7;
+  --pos:#0C7A63; --neg:#BE3327; --warn:#A86400; --muted:#65707F;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+h1{font-size:30px} h2{font-size:20px} h3{font-size:15px}
+p{margin:0 0 10px}
+a{color:var(--accent-d)}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.panel.tight{padding:14px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}}
+button{font-family:inherit;font-size:14px;font-weight:650;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 14px;cursor:pointer}
+button:hover{border-color:#9FA9B8}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:var(--accent-d);border-color:var(--accent-d)}
+button.ghost{background:transparent}
+button.danger{color:var(--neg);border-color:#E7BDB8}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.sm{padding:5px 10px;font-size:13px}
+input[type=text],input[type=password],input[type=number],select{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+label.fld{display:block;margin-bottom:10px}
+label.fld span{display:block;font-size:12px;font-weight:650;color:var(--muted);margin-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tbody tr:hover{background:#F7F8FA}
+tfoot td{font-weight:750;border-top:2px solid var(--ink);border-bottom:none}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .warnc{color:var(--warn)}
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:5px;background:#EEF1F5;color:var(--muted)}
+.tag.hot{background:var(--accent-soft);color:var(--accent-d)}
+.tag.good{background:#E2F2EE;color:var(--pos)}
+.tag.bad{background:#FAE7E5;color:var(--neg)}
+.tag.warn{background:#FBF0DC;color:var(--warn)}
+
+/* masthead */
+.mast{background:var(--ink);color:#fff;padding:14px 0}
+.mast .wrap{padding-top:0;padding-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.mast h1{font-size:19px;color:#fff}
+.mast .sub{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#93A0B2}
+.hud{display:flex;gap:20px;flex-wrap:wrap}
+.hud div{text-align:right}
+.hud .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#93A0B2}
+.hud .v{font-family:var(--mono);font-size:17px;font-weight:700;color:#fff}
+
+/* tabs */
+.tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:16px}
+.tabs button{border:none;background:none;border-radius:0;padding:11px 14px;color:var(--muted);font-weight:650;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* signature: investor mood instrument */
+.mood{background:var(--ink);border-radius:var(--r);padding:16px 18px;color:#fff}
+.mood .bar{position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,#7E2A1B,#A86400,#0C7A63);margin:12px 0 8px}
+.mood .pin{position:absolute;top:-6px;width:3px;height:24px;background:#fff;border-radius:2px;transition:left .5s ease}
+.mood .zone{position:absolute;top:-3px;height:18px;border:2px dashed rgba(255,255,255,.6);border-radius:6px;transition:all .6s ease}
+.mood .legend{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#93A0B2}
+.mood .reward{margin-top:10px;font-size:13px;color:#C9D3E0}
+.mood .reward b{color:#fff}
+
+/* market cards */
+.mcard{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#fff}
+.mcard.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft)}
+.mcard.dead{opacity:.5}
+.mcard h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.stats{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.7}
+.stats b{color:var(--ink);font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.r1{background:#0C7A63}.r2{background:#5C9A2E}.r3{background:#C79000}.r4{background:#D2691E}.r5{background:#BE3327}
+
+/* sliders */
+.opsrow{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;background:#fff}
+.sl{margin-bottom:12px}
+.sl .lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:650;margin-bottom:2px}
+.sl .lab .val{font-family:var(--mono);color:var(--accent-d)}
+.sl .hint{font-size:11.5px;color:var(--muted);margin-bottom:4px}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.meter{height:8px;border-radius:4px;background:#EDF0F4;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+
+/* news */
+.news{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-bottom:12px}
+.news.crisis{border-left-color:var(--neg)}
+.news.calm{border-left-color:var(--line)}
+
+.feedback li{margin-bottom:6px}
+.scorebig{font-family:var(--mono);font-size:52px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.hr{height:1px;background:var(--line);margin:16px 0}
+.hidden{display:none!important}
+.center{text-align:center}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.stack>*+*{margin-top:8px}
+.chartbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.chartbox h3{margin-bottom:8px}
+svg{display:block;width:100%;height:auto}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:8px;font-size:14px;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+
+/* ============================================================
+   BOUTIQAAT: THE INFLUENCE GAME — simulation engine
+   Pure functions, no DOM. Money in US$ millions unless noted.
+   ============================================================ */
+
+/* pop = addressable adult shoppers, millions
+   affinity = willingness to buy through social channels (0-1)
+   prox = cultural closeness to the Gulf home market (0-1)
+   lead = baseline delivery days when served from a local warehouse
+   recruit = how much harder it is to sign influencers here (1 = home) */
+const MARKETS = [
+  { id:'kwt', name:'Kuwait',           region:'GCC',      pop:2.2,  aov:175, affinity:0.90, prox:1.00, rivalry:3, lead:1.5, growth:6,  recruit:1.0, entryScale:0.6, home:true,
+    start:{ pen:14.2, inf:700, mode:'LOCAL' } },
+  { id:'qat', name:'Qatar',            region:'GCC',      pop:1.6,  aov:205, affinity:0.88, prox:0.95, rivalry:3, lead:2.0, growth:7,  recruit:1.2, entryScale:0.7,
+    start:{ pen:4.2, inf:120, mode:'CROSS' } },
+  { id:'uae', name:'United Arab Emirates', region:'GCC',  pop:6.0,  aov:190, affinity:0.87, prox:0.90, rivalry:5, lead:2.0, growth:8,  recruit:1.5, entryScale:1.1,
+    start:{ pen:2.0, inf:130, mode:'CROSS' } },
+  { id:'ksa', name:'Saudi Arabia',     region:'GCC',      pop:20.0, aov:125, affinity:0.86, prox:0.88, rivalry:5, lead:2.5, growth:9,  recruit:1.4, entryScale:1.6,
+    start:{ pen:0.7, inf:100, mode:'LOCAL' } },
+  { id:'bho', name:'Bahrain & Oman',   region:'GCC',      pop:3.0,  aov:150, affinity:0.85, prox:0.92, rivalry:2, lead:2.0, growth:6,  recruit:1.2, entryScale:0.7,
+    start:{ pen:1.6, inf:50,  mode:'CROSS' } },
+  { id:'irq', name:'Iraq',             region:'Levant',   pop:12.0, aov:90,  affinity:0.80, prox:0.75, rivalry:2, lead:4.0, growth:14, recruit:1.6, entryScale:1.0,
+    start:{ pen:0.4, inf:20,  mode:'CROSS' } },
+  { id:'jor', name:'Jordan',           region:'Levant',   pop:4.0,  aov:100, affinity:0.78, prox:0.80, rivalry:2, lead:4.0, growth:11, recruit:1.5, entryScale:0.7 },
+  { id:'egy', name:'Egypt',            region:'North Africa', pop:30.0, aov:60, affinity:0.82, prox:0.70, rivalry:4, lead:4.0, growth:16, recruit:1.7, entryScale:1.3 },
+  { id:'tur', name:'Türkiye',          region:'Wider MENA', pop:30.0, aov:70, affinity:0.72, prox:0.50, rivalry:5, lead:4.0, growth:12, recruit:2.2, entryScale:1.4 },
+  { id:'idn', name:'Indonesia',        region:'Asia',     pop:80.0, aov:45,  affinity:0.88, prox:0.35, rivalry:5, lead:4.5, growth:14, recruit:2.8, entryScale:1.8 },
+  { id:'ind', name:'India',            region:'Asia',     pop:200.0,aov:40,  affinity:0.90, prox:0.30, rivalry:6, lead:4.5, growth:16, recruit:3.0, entryScale:2.0 },
+  { id:'gbr', name:'United Kingdom',   region:'Europe',   pop:30.0, aov:110, affinity:0.56, prox:0.15, rivalry:6, lead:4.0, growth:4,  recruit:3.4, entryScale:1.7 },
+  { id:'fra', name:'France',           region:'Europe',   pop:28.0, aov:115, affinity:0.45, prox:0.12, rivalry:6, lead:4.0, growth:4,  recruit:3.4, entryScale:1.7 },
+  { id:'deu', name:'Germany',          region:'Europe',   pop:35.0, aov:110, affinity:0.42, prox:0.12, rivalry:6, lead:4.0, growth:4,  recruit:3.4, entryScale:1.7 },
+];
+
+const MODES = {
+  LOCAL:   { key:'LOCAL',   label:'Local warehouse and local influencers', entry:28, ceilMul:1.00, leadAdd:0,   recruits:true,  ownEconomics:true  },
+  CROSS:   { key:'CROSS',   label:'Ship across the border from Kuwait',    entry:3,  ceilMul:0.55, leadAdd:6.5, recruits:false, ownEconomics:true  },
+  PARTNER: { key:'PARTNER', label:'License the platform to a local partner',entry:7, ceilMul:0.60, leadAdd:1.0, recruits:false, ownEconomics:false },
+};
+const MODE_NOTES = {
+  LOCAL:'Your own warehouse, your own team, and influencers recruited on the ground. Fast delivery, full economics, heavy fixed cost.',
+  CROSS:'Orders ship from Kuwait. Almost free to switch on, but delivery takes a week or more and you never build a local influencer base.',
+  PARTNER:'A local company runs the market under your platform. You collect a royalty, carry no inventory or logistics, and control very little.',
+};
+
+/* influencer tiers: audience in millions, and the share of that audience that acts */
+const TIERS = {
+  hero:  { label:'Headline influencers', reach:1.20, conv:0.012, sign:1.20, keep:0.045 },
+  mid:   { label:'Established creators', reach:0.15, conv:0.022, sign:0.15, keep:0.009 },
+  micro: { label:'Micro-influencers',    reach:0.03, conv:0.039, sign:0.02, keep:0.0022 },
+};
+
+const STORE_TYPES = {
+  kiosk:    { key:'kiosk',    label:'Fragrance kiosk',      sqm:40,  fitout:0.15, staff:0.07, baseSales:0.6,  halo:0.010, vmNeed:20, max:24 },
+  category: { key:'category', label:'Category store',       sqm:200, fitout:0.70, staff:0.20, baseSales:2.8,  halo:0.030, vmNeed:40, max:12 },
+  flagship: { key:'flagship', label:'Boutiqaat flagship',   sqm:800, fitout:4.20, staff:0.95, baseSales:20.0, halo:0.110, vmNeed:60, max:4  },
+};
+const MALLS = {
+  premium: { key:'premium', label:'Premium mall',   rent:3000, footfall:1.25 },
+  mid:     { key:'mid',     label:'Mid-tier mall',  rent:1500, footfall:1.00 },
+  value:   { key:'value',   label:'Secondary mall', rent:700,  footfall:0.72 },
+};
+
+const DEFAULT_EVENTS = {
+  rivalPlatform: true,   // Y2 a global social-commerce platform enters the Gulf and bids for influencers
+  ksaOpening:    true,   // Y3 Saudi retail and digital reform widens the prize
+  heroExit:      true,   // Y3 your biggest creator is poached
+  brandAudit:    true,   // Y4 brand partners review your private label
+  rentShock:     false,  // Y4 premium mall rents jump
+  customs:       false,  // Y5 cross-border customs tighten
+};
+
+function makeRng(seedStr){
+  let h = 2166136261 >>> 0;
+  for(let i=0;i<seedStr.length;i++){ h ^= seedStr.charCodeAt(i); h = Math.imul(h,16777619)>>>0; }
+  return function(){ h ^= h<<13; h>>>=0; h ^= h>>17; h ^= h<<5; h>>>=0; return h/4294967296; };
+}
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function marketDef(id){ return MARKETS.find(m=>m.id===id); }
+
+function ceilingFor(m, st){
+  let c = 24 * m.affinity * Math.pow(m.prox, 1.2);
+  c /= (1 + 0.12*(m.rivalry-2));
+  if(st && st.events.ksaOpening && st.year>=3 && m.id==='ksa') c *= 1.25;
+  return c;
+}
+function entryCost(id, mode){ return Math.round(MODES[mode].entry * marketDef(id).entryScale * 10)/10; }
+
+function defaultDecisions(st){
+  return {
+    commission: st.commission, academy: st.academySpend, plShare: st.plShare, plBranding: st.plBranding,
+    brandInvest: st.brandInvest, deliveryFee: st.deliveryFee, warehouse: st.warehouse,
+    marketing: st.marketing, retailCap: st.retailCap, recruit: st.recruit, mix: st.mix,
+    entries:{}, upgrades:[], exits:[], stores:[], closeStores:[],
+  };
+}
+
+function newRun(opts){
+  const seed=(opts&&opts.seed)||'default';
+  const events=Object.assign({},DEFAULT_EVENTS,(opts&&opts.events)||{});
+  const rounds=(opts&&opts.rounds)||6;
+  const st={
+    seed, events, rounds, year:1, finished:false,
+    cash:220, cumProfit:0,
+    commission:8, academySpend:30, plShare:18, plBranding:'personal',
+    brandInvest:35, deliveryFee:8, warehouse:55, marketing:10, retailCap:15,
+    recruit:25, mix:20,                     // mix: 0 = all headline, 100 = all micro
+    academy:25, vm:15, marketRate:8.0, brandRel:70,
+    markets:{}, stores:[], history:[], news:[], meta:{},
+  };
+  MARKETS.forEach(m=>{
+    const s=m.start;
+    st.markets[m.id]={ id:m.id, status:s?'active':'none', mode:s?s.mode:null,
+      pen:s?s.pen:0, inf:{hero:s?Math.round(s.inf*0.055):0, mid:s?Math.round(s.inf*0.945):0, micro:0},
+      invested:0, years:s?3:0, gmv:0, revenue:0, profit:0, customers:0 };
+  });
+  st.news=buildNews(st,1);
+  return st;
+}
+
+function tierPower(inf){
+  return inf.hero*TIERS.hero.reach*TIERS.hero.conv
+       + inf.mid*TIERS.mid.reach*TIERS.mid.conv
+       + inf.micro*TIERS.micro.reach*TIERS.micro.conv;
+}
+function headcount(inf){ return inf.hero+inf.mid+inf.micro; }
+function networkTotal(st){
+  const t={hero:0,mid:0,micro:0};
+  Object.values(st.markets).forEach(ms=>{ if(ms.status==='active'){ t.hero+=ms.inf.hero; t.mid+=ms.inf.mid; t.micro+=ms.inf.micro; } });
+  return t;
+}
+
+function resolveYear(st, d){
+  const rng=makeRng(st.seed+':'+st.year);
+  const year=st.year, log=[];
+  let capex=0;
+
+  // carry the sliders into state
+  ['commission','plShare','brandInvest','deliveryFee','warehouse','marketing','retailCap','recruit','mix'].forEach(k=>{ st[k]=d[k]; });
+  st.academySpend=d.academy;
+  if(d.plBranding!==st.plBranding){
+    st.plBranding=d.plBranding; capex+=6;
+    log.push({type:'move',text:'Relaunched the private label range under '+(d.plBranding==='neutral'?'neutral house names':"the influencers' own names")+'. Repackaging and relaunch cost $6M.'});
+  }
+
+  // ---- exits and entries ----
+  (d.exits||[]).forEach(id=>{
+    const ms=st.markets[id]; if(!ms||ms.status!=='active'||marketDef(id).home) return;
+    ms.status='exited'; ms.pen=0; ms.inf={hero:0,mid:0,micro:0};
+    log.push({type:'move',text:'Withdrew from '+marketDef(id).name+'. The influencers there have gone elsewhere.'});
+  });
+  const entered=[];
+  Object.keys(d.entries||{}).forEach(id=>{
+    const ms=st.markets[id]; if(!ms||ms.status!=='none') return;
+    const c=entryCost(id,d.entries[id]);
+    capex+=c; ms.invested+=c; ms.status='active'; ms.mode=d.entries[id]; ms.years=0; entered.push(id);
+    log.push({type:'move',text:'Opened '+marketDef(id).name+' — '+MODES[ms.mode].label.toLowerCase()+', $'+c+'M.'});
+  });
+
+  // ---- upgrade a cross-border market into a local operation ----
+  (d.upgrades||[]).forEach(id=>{
+    const ms=st.markets[id]; if(!ms||ms.status!=='active'||ms.mode!=='CROSS') return;
+    const c=Math.round(MODES.LOCAL.entry*marketDef(id).entryScale*0.9*10)/10;
+    capex+=c; ms.invested+=c; ms.mode='LOCAL'; ms.years=Math.max(1,ms.years);
+    log.push({type:'move',text:'Built a warehouse and a local team in '+marketDef(id).name+' for $'+c+'M. Deliveries there drop from over a week to a couple of days, and you can now sign influencers on the ground.'});
+  });
+
+  // ---- store openings and closures ----
+  (d.stores||[]).forEach(s=>{
+    const t=STORE_TYPES[s.type], mall=MALLS[s.tier];
+    if(st.stores.filter(x=>x.type===s.type).length>=t.max) return;
+    capex+=t.fitout*(s.tier==='premium'?1.3:1);
+    st.stores.push({type:s.type,market:s.market,tier:s.tier,opened:year});
+    log.push({type:'move',text:'Opened a '+t.label.toLowerCase()+' in a '+mall.label.toLowerCase()+' in '+marketDef(s.market).name+'.'});
+  });
+  (d.closeStores||[]).slice().sort((a,b)=>b-a).forEach(i=>{ if(st.stores[i]) st.stores.splice(i,1); });
+
+  // ---- capability stocks build slowly ----
+  st.academy = clamp(st.academy + (d.academy/100)*26 - 6, 0, 100);
+  st.vm      = clamp(st.vm + (d.retailCap/100)*24 - 5, 0, 100);
+
+  // ---- influencer market rate drifts, and rivals bid it up ----
+  st.marketRate += 0.35;
+  if(st.events.rivalPlatform && year===2){ st.marketRate += 2.6;
+    log.push({type:'crisis',text:'A global short-video platform has launched shopping across the Gulf and is paying creators well above the going rate. The market rate for influencer commission has jumped.'}); }
+
+  // ---- recruitment ----
+  const active=Object.keys(st.markets).filter(id=>st.markets[id].status==='active');
+  const recruitBudget=(d.recruit/100)*70;
+  const weights={}; let wSum=0;
+  active.forEach(id=>{ const m=marketDef(id);
+    if(!MODES[st.markets[id].mode].recruits) return;
+    const w=(m.pop*m.affinity)/m.recruit; weights[id]=w; wSum+=w; });
+  let signed={hero:0,mid:0,micro:0};
+  active.forEach(id=>{
+    if(!weights[id]) return;
+    const m=marketDef(id), ms=st.markets[id];
+    const budget=recruitBudget*weights[id]/wSum;
+    const microShare=d.mix/100;
+    const bMicro=budget*microShare, bBig=budget*(1-microShare);
+    const nMicro=Math.floor(bMicro/(TIERS.micro.sign*m.recruit));
+    const nHero=Math.floor(bBig*0.35/(TIERS.hero.sign*m.recruit));
+    const nMid=Math.floor(bBig*0.65/(TIERS.mid.sign*m.recruit));
+    ms.inf.micro+=nMicro; ms.inf.hero+=nHero; ms.inf.mid+=nMid;
+    signed.micro+=nMicro; signed.hero+=nHero; signed.mid+=nMid;
+  });
+
+  // ---- churn: creators leave if you underpay or neglect them ----
+  const gap=st.marketRate-d.commission;
+  let churn=0.10 + Math.max(0,gap)*0.035 - (st.academy/100)*0.05;
+  if(st.plShare>25) churn -= 0.02;                       // co-created lines lock people in
+  const storeCount=st.stores.length;
+  if(storeCount>=5 && st.vm<40){ churn += 0.05;
+    log.push({type:'warn',text:'Creators cannot see what the shops sell, so they cannot see what they earned. Several have quietly stopped posting. Investing in retail and omnichannel systems would fix the blind spot.'}); }
+  churn=clamp(churn,0.03,0.55);
+  active.forEach(id=>{ const ms=st.markets[id];
+    ['hero','mid','micro'].forEach(t=>{ ms.inf[t]=Math.max(0,Math.round(ms.inf[t]*(1-churn))); }); });
+
+  if(st.events.heroExit && year===3){
+    const net=networkTotal(st); const heroShareOfPower= net.hero*TIERS.hero.reach*TIERS.hero.conv/Math.max(0.001,tierPower(net));
+    const lose=Math.max(1,Math.round(net.hero*0.18));
+    let left=lose;
+    active.forEach(id=>{ const ms=st.markets[id]; const take=Math.min(ms.inf.hero,Math.ceil(lose*(ms.inf.hero/Math.max(1,net.hero)))); ms.inf.hero-=take; left-=take; });
+    log.push({type:'crisis',text:'Your best-known creators have been signed by a rival for guaranteed money. '+lose+' headline names have gone, taking '+Math.round(heroShareOfPower*100)+'% of your reach with them.'});
+  }
+
+  // ---- brand partner relationship ----
+  let brandDelta = 7*(d.brandInvest/100) - 2.5;
+  if(d.plShare>40) brandDelta -= (d.plShare-40)*0.55;
+  if(st.events.brandAudit && year===4 && d.plShare>38){ brandDelta -= 14;
+    log.push({type:'crisis',text:'International brand partners have reviewed your shelves and concluded your own labels now compete with theirs. Two have withdrawn their exclusives.'}); }
+  st.brandRel=clamp(st.brandRel+brandDelta,0,100);
+  const exclusivity=st.brandRel/100;
+
+  // ---- gross margin ----
+  let gm = 0.33 + 0.18*(d.plShare/100);
+  if(st.brandRel<40) gm -= 0.05;
+  if(d.plBranding==='personal') gm += 0.01;   // a little more margin, far less conversion (below)
+
+  // ---- per-market economics ----
+  const net=networkTotal(st);
+  const storesBy={}; st.stores.forEach(s=>{ storesBy[s.market]=(storesBy[s.market]||[]).concat([s]); });
+  const halo = 1 + 0.012*Math.max(0, active.length-5);   // the founder's observation: a new flag lifts the old ones
+  let revenue=0, cogs=0, commissionCost=0, deliveryCost=0, warehouseCost=0, gmvTotal=0, orders=0, royalty=0, storeSales=0, storeCost=0;
+  const byMarket={}; let serviceSum=0, serviceN=0;
+
+  active.forEach(id=>{
+    const m=marketDef(id), ms=st.markets[id], mode=MODES[ms.mode];
+    const pop=m.pop*Math.pow(1+m.growth/100, year-1);
+    const leadDays=m.lead+mode.leadAdd*(st.events.customs&&year>=5&&ms.mode==='CROSS'?1.5:1)
+                   - (ms.mode==='LOCAL'?1.2*(d.warehouse/100):0);
+    const service=clamp(1-(leadDays-1)/11,0.15,1);
+    serviceSum+=service; serviceN++;
+
+    let reachTerm, service2;
+    if(ms.mode==='PARTNER'){
+      reachTerm=0.40;                       // the partner brings its own creators, and caps out early
+      service2=0.60;
+    } else {
+      const power=tierPower(ms.inf)*(0.75+0.45*(st.academy/100));
+      const intensity=power/Math.max(0.2,pop);
+      reachTerm=intensity*2.4/(1+intensity*2.4);
+      service2=service;
+    }
+
+    const storeHalo=(storesBy[id]||[]).reduce((a,s)=>{
+      const t=STORE_TYPES[s.type];
+      return a+t.halo*MALLS[s.tier].footfall*(st.vm>=t.vmNeed?1:0.35);
+    },0);
+    const goodFlag=(storesBy[id]||[]).some(s=>s.type==='flagship'&&st.vm>=STORE_TYPES.flagship.vmNeed);
+    const plWall=goodFlag?60:45;
+    const feePenalty = 0.021*Math.pow(Math.max(0,d.deliveryFee-5),1.30);   // a high fee costs demand, steeply
+    let value = 0.50 + 0.22*exclusivity + 0.18*service2 - feePenalty
+              + 0.10*Math.sqrt(d.marketing/100) + storeHalo;
+    if(d.plBranding==='personal') value -= 0.34*(d.plShare/100);   // a creator's own name does not travel past the fandom
+    if(d.plShare>plWall) value -= (d.plShare-plWall)*0.004;   // an own-brand wall narrows the reason to visit
+    value=clamp(value,0.2,1.35);
+
+    const ceil=ceilingFor(m,st)*mode.ceilMul;
+    const tenure=Math.min(1,0.55+0.15*ms.years);
+    const target=clamp(ceil*reachTerm*value*tenure*halo,0,ceil);
+    ms.pen=ms.pen+(target-ms.pen)*0.45;
+
+    const customers=pop*1e6*(ms.pen/100);
+    const freq=1.2+1.8*service2+0.30*(st.academy/100);
+    let aov=m.aov*(0.88+0.20*exclusivity+0.06*(storeHalo>0?1:0)-(goodFlag?0.05:0.10)*(d.plShare/100));
+    let gmv=customers*freq*aov/1e6;                       // $M
+    if(ms.years===0) gmv*=0.5;
+    const ord=customers*freq/1e6;                          // millions of orders
+
+    let rev=0, mCogs=0, mComm=0, mDel=0, mWh=0;
+    if(mode.ownEconomics){
+      rev=gmv+ord*d.deliveryFee;
+      mCogs=gmv*(1-gm);
+      mComm=gmv*(d.commission/100);
+      mDel=ord*(ms.mode==='LOCAL'?6.2-1.4*(d.warehouse/100):10.5);
+      mWh=ms.mode==='LOCAL'?(3.2+3.0*(d.warehouse/100))*Math.sqrt(m.entryScale):0.5;
+    } else {
+      rev=gmv*0.12; royalty+=rev; mWh=1.5;   // a small team supports the partner
+    }
+    const profit=rev-mCogs-mComm-mDel-mWh;
+    revenue+=rev; cogs+=mCogs; commissionCost+=mComm; deliveryCost+=mDel; warehouseCost+=mWh;
+    gmvTotal+=gmv; orders+=ord;
+    ms.gmv=gmv; ms.revenue=rev; ms.profit=profit; ms.customers=customers; ms.years+=1;
+    byMarket[id]={ pen:ms.pen, gmv, revenue:rev, profit, customers, service, leadDays,
+      influencers:headcount(ms.inf), mode:ms.mode };
+  });
+
+  // ---- shops ----
+  let cannibal=0;
+  st.stores.forEach(s=>{
+    const t=STORE_TYPES[s.type], mall=MALLS[s.tier], m=marketDef(s.market);
+    let rent=(t.sqm*mall.rent)/1e6;
+    if(st.events.rentShock&&year>=4&&s.tier==='premium') rent*=1.2;
+    let sales=t.baseSales*mall.footfall*(0.55+0.45*(st.brandRel/100))*(m.aov/175);
+    const capable=st.vm>=t.vmNeed;
+    if(!capable) sales*=0.45;
+    else sales*=(0.75+0.50*(st.vm/100));
+    if(s.opened===year) sales*=0.6;
+    storeSales+=sales;
+    storeCost+=rent+t.staff;
+    cannibal+=sales*0.35;
+    if(!capable&&s.type==='flagship'){
+      st.brandRel=clamp(st.brandRel-7,0,100);
+      log.push({type:'crisis',text:'The flagship opened before the company knew how to merchandise a shop. Reviews were unkind, and because the store carries your own name the damage landed on the brand.'});
+    }
+  });
+  revenue+=storeSales*1.0; cogs+=storeSales*(1-(gm+0.06));
+  revenue-=cannibal; cogs-=cannibal*(1-gm); commissionCost-=cannibal*(d.commission/100);
+
+  // ---- company costs ----
+  const heads=headcount(net);
+  const accountMgmt=(net.hero*TIERS.hero.keep+net.mid*TIERS.mid.keep+net.micro*TIERS.micro.keep)*(0.85+0.3*(st.academy/100));
+  const academyCost=(d.academy/100)*14;
+  const brandCost=(d.brandInvest/100)*11;
+  const retailCost=(d.retailCap/100)*10;
+  const marketingCost=(d.marketing/100)*42;
+  const corporate=72*Math.pow(1.05,year-1);
+  const opex=accountMgmt+academyCost+brandCost+retailCost+marketingCost+corporate+storeCost+warehouseCost+deliveryCost+recruitBudget;
+  const ebitda=revenue-cogs-commissionCost-(opex-warehouseCost-deliveryCost);
+
+  st.cash=st.cash+ebitda-capex;
+  st.cumProfit+=ebitda;
+  let emergency=0;
+  if(st.cash<0){ emergency=Math.round(-st.cash+15); st.cash+=emergency; st.meta.rescued=true;
+    log.push({type:'warn',text:'You ran out of money. The shareholders put in $'+emergency+'M on terms that will show up in the final valuation.'}); }
+
+  const service=serviceN?serviceSum/serviceN:0.5;
+  const prevRev=st.history.length?st.history[st.history.length-1].revenue:revenue;
+  const growth=prevRev>0?(revenue/prevRev-1):0;
+  const retention=1-churn;
+  const conc=net.hero*TIERS.hero.reach*TIERS.hero.conv/Math.max(0.001,tierPower(net));
+  const moat=clamp(0.30*retention+0.25*(st.brandRel/100)+0.20*service+0.15*Math.min(1,active.length/8)+0.10*(1-conc),0,1);
+
+  const rec={ year, revenue, gmv:gmvTotal, orders, ebitda, margin:revenue>0?ebitda/revenue*100:0,
+    cogs, commissionCost, deliveryCost, warehouseCost, accountMgmt, marketingCost, storeCost, corporate,
+    academyCost, brandCost, retailCost, capex, recruitBudget, emergency, cash:st.cash, cumProfit:st.cumProfit,
+    storeSales, cannibal, royalty, byMarket, log, growth:growth*100, churn, retention, moat, conc,
+    brandRel:st.brandRel, academy:st.academy, vm:st.vm, marketRate:st.marketRate,
+    network:Object.assign({},net), signed, service, stores:st.stores.length, activeMarkets:active.length };
+  st.history.push(rec);
+  st.year+=1;
+  if(st.year>st.rounds) st.finished=true; else st.news=buildNews(st,st.year);
+  return rec;
+}
+
+function buildNews(st,y){
+  const n=[];
+  if(y===1) n.push({tag:'Where you stand',text:'You are the best-known beauty platform in Kuwait and barely visible in Saudi Arabia, a market ten times the size. Your influencers are almost all Kuwaiti. Everything follows from that.'});
+  if(y===2){
+    n.push({tag:'Outlook',text:'Social commerce keeps growing across the Gulf. Shoppers in Saudi Arabia and the UAE now buy from social channels at almost the same rate as at home.'});
+    if(st.events.rivalPlatform) n.push({tag:'Breaking',text:'A global short-video platform has switched on shopping across the Gulf and is signing creators with guaranteed payments. Expect the going rate for commission to rise, and expect your roster to notice.'});
+  }
+  if(y===3){
+    if(st.events.ksaOpening) n.push({tag:'Breaking',text:'Saudi reforms have widened the digital retail market considerably. The prize there is now larger than everything else you serve put together — if you can reach it.'});
+    if(st.events.heroExit) n.push({tag:'Risk watch',text:'Rivals are approaching your best-known creators directly. The more of your sales sit with a handful of famous names, the more this will hurt.'});
+  }
+  if(y===4){
+    if(st.events.brandAudit) n.push({tag:'Breaking',text:'International brand partners are reviewing how much shelf space your own labels now take. Platforms judged to be competing with their partners have lost their exclusives.'});
+    if(st.events.rentShock) n.push({tag:'Breaking',text:'Rents in the premium malls have risen sharply this year.'});
+  }
+  if(y===5){
+    if(st.events.customs) n.push({tag:'Breaking',text:'Customs procedures have tightened across the Gulf. Anything shipped across a border from Kuwait will take noticeably longer.'});
+    n.push({tag:'Outlook',text:'Your board wants to know whether this is a Kuwaiti company that sells abroad or a regional company. The answer should be visible in the numbers by now.'});
+  }
+  if(y===6) n.push({tag:'Outlook',text:'Final year. Whatever you have built is what will be valued.'});
+
+  const gap=st.marketRate-st.commission;
+  if(gap>1.5) n.push({tag:'Risk watch',text:'You are paying creators about '+gap.toFixed(1)+' points below what the market now offers them. Expect people to leave.'});
+  if(st.plShare>40&&st.brandRel<60) n.push({tag:'Risk watch',text:'Your own labels are taking a lot of space and your brand partners have noticed. Relationships are cooling.'});
+  if(st.stores.length>=3&&st.vm<40) n.push({tag:'Risk watch',text:'You are running shops without the skills to run shops. Merchandising and omnichannel systems are behind the store count.'});
+  return n;
+}
+
+function score(st){
+  const last=st.history[st.history.length-1]||{revenue:0,ebitda:0,moat:0,growth:0};
+  const mult=5+9*last.moat+8*clamp(last.growth/100,0,0.35);
+  const core=last.ebitda>0?last.ebitda*mult:last.revenue*0.60;
+  const ev=Math.max(0,core+st.cash-(st.meta.rescued?120:0));
+  return {
+    ev, evB:ev/1000, mult, revenue:last.revenue, ebitda:last.ebitda, margin:last.margin,
+    moat:last.moat, cash:st.cash, cumProfit:st.cumProfit, growth:last.growth,
+    markets:Object.keys(st.markets).filter(id=>st.markets[id].status==='active').length,
+    stores:st.stores.length, network:last.network?last.network.hero+last.network.mid+last.network.micro:0,
+    brandRel:st.brandRel, retention:last.retention,
+    grade: ev>=2400?'A':ev>=1700?'B':ev>=1000?'C':'D',
+  };
+}
+
+
+
+</script>
+<script>
+
+/* ============================================================
+   BOUTIQAAT: THE INFLUENCE GAME — student page
+   ============================================================ */
+const PAR = 1800; // par valuation, $M
+
+/* ============================================================
+   STORAGE — pluggable back ends
+   auto        : Claude artifact storage, when running inside a chat
+   http        : any endpoint following the contract in HOSTING.md
+                 (Google Apps Script, Cloudflare Worker, Node, ...)
+   supabase    : Supabase REST, table sim_kv(key text primary key, value text)
+   offline     : this browser only. Players export result codes.
+   ============================================================ */
+const CFG = { backend:'auto', api:'', key:'', cls:'' };
+
+function readParams(){
+  const out = {};
+  const grab = str => { if(!str) return; new URLSearchParams(str.replace(/^[#?]/,'')).forEach((v,k)=>out[k]=v); };
+  grab(location.search); grab(location.hash);
+  return out;
+}
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function loadCfg(){
+  let saved = {};
+  try{ saved = JSON.parse(lsGet('btq:cfg')||'{}'); }catch(e){}
+  Object.assign(CFG, saved);
+  const p = readParams();
+  if(p.backend) CFG.backend = p.backend;
+  if(p.api) CFG.api = decodeURIComponent(p.api);
+  if(p.key) CFG.key = decodeURIComponent(p.key);
+  if(p.cls || p.class) CFG.cls = (p.cls||p.class).toUpperCase();
+  if(CFG.backend==='auto' && !hasArtifactStore() && CFG.api) CFG.backend='http';
+  if(CFG.backend==='auto' && !hasArtifactStore()) CFG.backend='offline';
+}
+function saveCfg(){ lsSet('btq:cfg', JSON.stringify(CFG)); }
+function hasArtifactStore(){ return typeof window!=='undefined' && window.storage && typeof window.storage.get==='function'; }
+function backendName(){
+  return { auto:'Claude chat storage', artifact:'Claude chat storage', http:'Shared server',
+           supabase:'Supabase', offline:'This browser only' }[CFG.backend] || CFG.backend;
+}
+function backendLive(){ return CFG.backend==='http' || CFG.backend==='supabase' || (CFG.backend!=='offline' && hasArtifactStore()); }
+
+const mem = new Map();
+async function jpost(body){ return api(body); }
+
+/* ============================================================
+   TRANSPORT
+   Normally we POST. Some campus networks and browser extensions block
+   the cross-origin POST to script.google.com, which used to look like
+   "could not connect". If that happens we fall back to loading the
+   reply as a plain script, which nothing blocks. Every action on the
+   backend is available both ways.
+   ============================================================ */
+const TRANSPORT = { mode: 'auto' };          // auto -> fetch -> jsonp
+
+function cleanApi(v){
+  return String(v || '').replace(/[\u200B-\u200D\uFEFF]/g,'').trim().replace(/\/+$/,'');
+}
+function qs(params){
+  return Object.keys(params).filter(k => params[k] !== undefined && params[k] !== null)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+}
+function jsonpCall(params){
+  return new Promise((resolve, reject) => {
+    const api = cleanApi(CFG.api);
+    if(!api) return reject(new Error('no address'));
+    const cb = '__sim_cb_' + Math.random().toString(36).slice(2);
+    const el = document.createElement('script');
+    let settled = false;
+    const cleanup = () => {
+      try{ delete window[cb]; }catch(e){ window[cb] = undefined; }
+      if(el.parentNode) el.parentNode.removeChild(el);
+    };
+    window[cb] = (data) => { settled = true; cleanup(); resolve(data); };
+    el.onerror = () => { if(!settled){ cleanup(); reject(new Error('script blocked')); } };
+    el.src = api + '?' + qs(params) + '&callback=' + cb;
+    document.head.appendChild(el);
+    setTimeout(() => { if(!settled){ cleanup(); reject(new Error('timed out')); } }, 20000);
+  });
+}
+async function fetchCall(params){
+  const url = cleanApi(CFG.api);
+  if(!url) throw new Error('no address');
+  const READS = { get:1, all:1, status:1, check:1 };
+  let r;
+  if(READS[params.action]){
+    r = await fetch(url + '?' + qs(params));              // reads stay on GET, as older backends expect
+  }else{
+    r = await fetch(url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(params) });
+  }
+  const body = (typeof r.text === 'function') ? await r.text()
+             : (typeof r.json === 'function') ? JSON.stringify(await r.json()) : '';
+  try{ return JSON.parse(body); }
+  catch(e){ const err = new Error('not data'); err.body = body; err.status = r.status; throw err; }
+}
+/* One call, whichever way works. The winning route is remembered. */
+async function api(params){
+  if(TRANSPORT.mode !== 'jsonp'){
+    try{
+      const j = await fetchCall(params);
+      TRANSPORT.mode = 'fetch';
+      return j;
+    }catch(e){
+      if(TRANSPORT.mode === 'fetch') throw e;      // it worked before, so this is a real error
+      TRANSPORT.lastFetchError = e;                 // first attempt: try the other way
+    }
+  }
+  const j = await jsonpCall(params);
+  TRANSPORT.mode = 'jsonp';
+  return j;
+}
+
+const Adapters = {
+  artifact: {
+    async get(k){ try{ const r=await window.storage.get(k,true); return r?r.value:null; }catch(e){ return null; } },
+    async set(k,v){ try{ await window.storage.set(k,v,true); return true; }catch(e){ return false; } },
+    async del(k){ try{ await window.storage.delete(k,true); return true; }catch(e){ return false; } },
+    async all(prefix){ let keys=[]; try{ const r=await window.storage.list(prefix,true); keys=(r&&r.keys)||[]; }catch(e){}
+      const out=[]; for(const k of keys){ const v=await this.get(k); if(v!=null) out.push({key:k,value:v}); } return out; },
+  },
+  http: {
+    tk(){ return (typeof AUTH!=='undefined'&&AUTH.token)?AUTH.token:null; },
+    note(j){ if(typeof NETERR!=='undefined' && j && j.error==='auth') NETERR.auth=true; return j; },
+    async get(k){ try{ const j=this.note(await api({action:'get',key:k})); return (j&&j.value!=null)?j.value:null; }
+      catch(e){ return null; } },
+    async set(k,v){ try{ const j=this.note(await api({action:'set',key:k,value:v,token:this.tk()}));
+      const ok=!!(j&&j.ok!==false); if(!ok&&typeof NETERR!=='undefined') NETERR.fail=true; return ok; }
+      catch(e){ if(typeof NETERR!=='undefined') NETERR.fail=true; return false; } },
+    async del(k){ try{ await api({action:'del',key:k,token:this.tk()}); return true; }catch(e){ return false; } },
+    async all(prefix){ try{ const j=this.note(await api({action:'all',prefix:prefix,token:this.tk()}));
+      return j && j.items ? j.items : (j && j.error ? null : []); }catch(e){ return null; } },
+  },
+  supabase: {
+    hdr(){ return { apikey:CFG.key, Authorization:'Bearer '+CFG.key, 'Content-Type':'application/json' }; },
+    async get(k){ try{ const r=await fetch(CFG.api+'/rest/v1/sim_kv?select=value&key=eq.'+encodeURIComponent(k),{headers:this.hdr()});
+      const j=await r.json(); return (j&&j[0])?j[0].value:null; }catch(e){ return null; } },
+    async set(k,v){ try{ const r=await fetch(CFG.api+'/rest/v1/sim_kv',{method:'POST',
+      headers:Object.assign(this.hdr(),{Prefer:'resolution=merge-duplicates'}), body:JSON.stringify({key:k,value:v})}); return r.ok; }catch(e){ return false; } },
+    async del(k){ try{ await fetch(CFG.api+'/rest/v1/sim_kv?key=eq.'+encodeURIComponent(k),{method:'DELETE',headers:this.hdr()}); return true; }catch(e){ return false; } },
+    async all(prefix){ try{ const r=await fetch(CFG.api+'/rest/v1/sim_kv?select=key,value&key=like.'+encodeURIComponent(prefix+'*'),{headers:this.hdr()});
+      return await r.json()||[]; }catch(e){ return []; } },
+  },
+  offline: {
+    async get(k){ const v=lsGet(k); return v!=null?v:(mem.has(k)?mem.get(k):null); },
+    async set(k,v){ lsSet(k,v); mem.set(k,v); return true; },
+    async del(k){ lsDel(k); mem.delete(k); return true; },
+    async all(prefix){ const out=[]; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+      if(k&&k.startsWith(prefix)) out.push({key:k,value:localStorage.getItem(k)}); } }catch(e){
+      mem.forEach((v,k)=>{ if(k.startsWith(prefix)) out.push({key:k,value:v}); }); } return out; },
+  },
+};
+function A(){ const b = (CFG.backend==='auto'||CFG.backend==='artifact') ? (hasArtifactStore()?'artifact':'offline') : CFG.backend; return Adapters[b]||Adapters.offline; }
+const S = {
+  get:  k => A().get(k),
+  set:  (k,v) => A().set(k,v),
+  del:  k => A().del(k),
+  all:  p => A().all(p),
+};
+
+/* ---- keys are namespaced per class so semesters never collide ---- */
+const sessionKey = c => 'btq:'+c+':session';
+const resPrefix  = c => 'btq:'+c+':res:';
+
+const UI = {
+  role:null, session:null, student:'', run:null, tab:'brief', draft:null, cls:null, classes:[],
+  results:[], busy:false, lastYear:null, submitted:false, runsUsed:0,
+};
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const root = () => document.getElementById('root');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40) || 'player';
+function money(m){ // $M in, human out
+  if (m === null || m === undefined || isNaN(m)) return '—';
+  const a = Math.abs(m);
+  if (a >= 1000) return (m/1000).toFixed(a>=10000?0:2)+'B';
+  return Math.round(m)+'M';
+}
+const sgn = m => (m>=0?'':'-') + '$' + money(Math.abs(m));
+function toast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 3200);
+}
+const pct = (v,d=1) => (v===null||isNaN(v)) ? '—' : v.toFixed(d)+'%';
+function riskDot(n){ return `<span class="dot r${n}"></span>`; }
+const LEVEL = ['','Very low','Low','Medium','High','Very high','Extreme','Extreme','Extreme'];
+
+/* ---------------- charts ---------------- */
+function chartBars(labels, values, fmt){
+  const W=520,H=180,PADL=54,PADB=24,PADT=10;
+  const max=Math.max(1,...values.map(v=>Math.max(0,v))), min=Math.min(0,...values);
+  const span=(max-min)||1, y0=PADT+(max/span)*(H-PADT-PADB);
+  const bw=(W-PADL-10)/labels.length;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="bar chart">`;
+  s+=`<line x1="${PADL}" y1="${y0}" x2="${W-4}" y2="${y0}" stroke="#0E1726" stroke-width="1"/>`;
+  [max,min].forEach(v=>{const y=PADT+((max-v)/span)*(H-PADT-PADB);
+    s+=`<text x="${PADL-6}" y="${y+4}" text-anchor="end" font-family="ui-monospace,monospace" font-size="10" fill="#65707F">${fmt(v)}</text>`;});
+  values.forEach((v,i)=>{
+    const x=PADL+i*bw+bw*0.18, w=bw*0.64;
+    const y=v>=0? PADT+((max-v)/span)*(H-PADT-PADB) : y0;
+    const h=Math.max(1,Math.abs(v)/span*(H-PADT-PADB));
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${v>=0?'#0C7A63':'#BE3327'}" rx="2"/>`;
+    s+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#65707F">${esc(labels[i])}</text>`;
+  });
+  return s+'</svg>';
+}
+function chartLines(labels, series, fmt, forceZero){
+  const W=520,H=180,PADL=54,PADB=24,PADT=12;
+  const all=series.flatMap(s=>s.values);
+  let max=Math.max(...all), min=Math.min(...all);
+  if(forceZero){max=Math.max(max,0);min=Math.min(min,0);}
+  if(max===min){max+=1;min-=1;}
+  const span=max-min;
+  const X=i=>PADL+(labels.length<2?0:i*(W-PADL-10)/(labels.length-1));
+  const Y=v=>PADT+((max-v)/span)*(H-PADT-PADB);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="line chart">`;
+  [max,(max+min)/2,min].forEach(v=>{s+=`<line x1="${PADL}" y1="${Y(v)}" x2="${W-4}" y2="${Y(v)}" stroke="#E4E8EE"/>`+
+    `<text x="${PADL-6}" y="${Y(v)+4}" text-anchor="end" font-family="ui-monospace,monospace" font-size="10" fill="#65707F">${fmt(v)}</text>`;});
+  if(min<0&&max>0) s+=`<line x1="${PADL}" y1="${Y(0)}" x2="${W-4}" y2="${Y(0)}" stroke="#0E1726"/>`;
+  series.forEach(se=>{
+    const d=se.values.map((v,i)=>`${i?'L':'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+    s+=`<path d="${d}" fill="none" stroke="${se.color}" stroke-width="2.4" stroke-linejoin="round"/>`;
+    se.values.forEach((v,i)=>{s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3.2" fill="${se.color}"/>`;});
+  });
+  labels.forEach((l,i)=>{s+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="10" fill="#65707F">${esc(l)}</text>`;});
+  return s+'</svg>';
+}
+
+/* ---------------- boot ---------------- */
+function renderJoin(){
+  root().innerHTML = `
+  <div class="mast"><div class="wrap"><div><h1>Boutiqaat: The Influence Game</h1>
+    <div class="sub">Join your class</div></div></div></div>
+  <div class="wrap"><div class="panel" style="max-width:520px">
+    <h2>Enter your class code</h2>
+    <p class="small muted">Your instructor will have given you a code such as BTQ-2026A, or a link that fills it in for you.</p>
+    <label class="fld"><span>Class code</span><input type="text" id="cc" value="${esc(UI.cls||'')}" onkeydown="if(event.key==='Enter')joinClass()"></label>
+    <button class="primary" onclick="joinClass()">Continue</button>
+    <button class="ghost sm" style="margin-top:14px" onclick="UI.role=null;render()">Back</button>
+    <p class="small muted" style="margin-top:12px">Storage: ${esc(backendName())}${backendLive()?'':' — your results will stay on this device and you will get a result code to send to your instructor.'}</p>
+  </div></div>`;
+}
+function renderLobby(){
+  const s=UI.session;
+  if(!UI.cls || !s) return renderJoin();
+  root().innerHTML = `
+  <div class="mast"><div class="wrap"><div><h1>Boutiqaat: The Influence Game</h1>
+    <div class="sub">${s?esc(s.title):'No session found'}</div></div></div></div>
+  <div class="wrap"><div class="panel" style="max-width:520px">
+    ${!s.open? `<h2>Waiting for the instructor</h2><p class="small muted">Class <b>${esc(s.code)}</b> is set up but play is closed. The game will begin when your instructor starts it.</p>
+           <button class="primary" onclick="boot()">Check again</button>
+           <button class="ghost sm" onclick="UI.session=null;UI.cls=null;render()">Different class</button>`
+      : `<h2>Join the game</h2>
+         <label class="fld"><span>Your name (or team name)</span><input type="text" id="nm" placeholder="e.g. Group 4 — Priya, Arun, Lin" onkeydown="if(event.key==='Enter')startRun()"></label>
+         <p class="small muted">Use the same name every time so your instructor can find your results.</p>
+         <button class="primary" onclick="startRun()">Start Year 1</button>`}
+    <button class="ghost sm" style="margin-top:14px" onclick="UI.role=null;render()">Back</button>
+  </div></div>`;
+}
+function newDraft(){
+  UI.draft = defaultDecisions(UI.run);
+  UI.shopPick = { type:'kiosk', market:'kwt', tier:'mid' };
+}
+
+/* ---------------- game shell ---------------- */
+function renderGame(){
+  const st=UI.run, s=UI.session;
+  const yr = st.finished ? st.rounds : st.year;
+  const est = score(st);
+  const net = networkTotal(st);
+  root().innerHTML = `
+  <div class="mast"><div class="wrap">
+    <div><h1>${esc(UI.student)}</h1><div class="sub">${st.finished?'Run complete':'Year '+yr+' of '+st.rounds} · run ${UI.runsUsed+1} of ${s.limit}</div></div>
+    <div class="hud">
+      <div><div class="k">Cash</div><div class="v">$${money(st.cash)}</div></div>
+      <div><div class="k">Creators</div><div class="v">${(net.hero+net.mid+net.micro).toLocaleString()}</div></div>
+      <div><div class="k">Brand partners</div><div class="v" style="color:${st.brandRel<45?'#F08D7A':'#5FD3A6'}">${Math.round(st.brandRel)}</div></div>
+      <div><div class="k">Markets</div><div class="v">${Object.keys(st.markets).filter(id=>st.markets[id].status==='active').length}</div></div>
+    </div>
+    <div id="netstatus" style="width:100%;text-align:right;margin-top:-6px">${statusHTML()}</div>
+  </div></div>
+  <div class="wrap">
+    <div class="tabs">
+      ${[['brief','Briefing'],['data','Markets'],['news','News'],['dec','Decisions'],['res','Results']]
+        .map(([k,l])=>`<button class="${UI.tab===k?'on':''}" onclick="UI.tab='${k}';render()">${l}</button>`).join('')}
+      ${st.finished?`<button class="${UI.tab==='end'?'on':''}" onclick="UI.tab='end';render()">Final scorecard</button>`:''}
+    </div>
+    ${UI.tab==='brief'?viewBrief():''}
+    ${UI.tab==='data'?viewData():''}
+    ${UI.tab==='news'?viewNews():''}
+    ${UI.tab==='dec'?viewDecisions():''}
+    ${UI.tab==='res'?viewResults():''}
+    ${UI.tab==='end'?viewEnd(est):''}
+  </div>`;
+  if(UI.tab==='dec' && !st.finished) paintDecisions();
+}
+
+/* the signature instrument: where every $100 of sales ends up */
+function valueBar(){
+  const st=UI.run, h=st.history[st.history.length-1];
+  if(!h||h.revenue<=0) return `<div class="mood"><div class="eyebrow" style="color:#93A0B2">Where the money goes</div>
+    <div class="reward" style="margin-top:10px">Run your first year to see how each $100 of sales is split.</div></div>`;
+  const g=Math.max(1,h.gmv);
+  const parts=[
+    ['Cost of the goods', h.cogs/g*100, '#5A6B80'],
+    ['Paid to creators', h.commissionCost/g*100, '#F4511E'],
+    ['Delivery and warehouses', (h.deliveryCost+h.warehouseCost)/g*100, '#8E6BB5'],
+    ['Everything else you run', (h.accountMgmt+h.marketingCost+h.corporate+h.storeCost+h.academyCost+h.brandCost+h.retailCost+h.recruitBudget)/g*100, '#B8860B'],
+  ];
+  const used=parts.reduce((a,p)=>a+p[1],0);
+  const kept=(h.revenue/g*100)-used;
+  let x=0; let bars='';
+  parts.forEach(p=>{ const w=Math.max(0,Math.min(100-x,p[1])); bars+=`<div style="position:absolute;left:${x}%;width:${w}%;height:100%;background:${p[2]}"></div>`; x+=w; });
+  if(kept>0) bars+=`<div style="position:absolute;left:${Math.min(99,x)}%;width:${Math.max(1,Math.min(100-x,kept))}%;height:100%;background:#0C7A63"></div>`;
+  return `<div class="mood">
+    <div class="eyebrow" style="color:#93A0B2">Where every $100 of sales ends up</div>
+    <div style="position:relative;height:16px;border-radius:8px;overflow:hidden;background:#2A3646;margin:12px 0 10px">${bars}</div>
+    <div class="small" style="color:#C9D3E0;line-height:1.9">
+      ${parts.map(p=>`<div><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${p[2]};margin-right:7px"></span>${p[0]} <b style="float:right;font-family:var(--mono)">$${p[1].toFixed(1)}</b></div>`).join('')}
+      <div style="border-top:1px solid #33415420;padding-top:5px"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${kept>=0?'#0C7A63':'#BE3327'};margin-right:7px"></span><b>Left for you</b> <b style="float:right;font-family:var(--mono);color:${kept>=0?'#5FD3A6':'#F08D7A'}">$${kept.toFixed(1)}</b></div>
+    </div></div>`;
+}
+
+function viewBrief(){
+  const st=UI.run;
+  return `<div class="grid g2"><div>
+    <div class="panel">
+      <div class="eyebrow">Your job</div>
+      <h2 style="margin:6px 0 10px">You run an influencer-led beauty marketplace out of Kuwait.</h2>
+      <p>Roughly 1,100 creators sell to their followers through storefronts on your app. You buy the stock, you deliver it the next day, and you pay them a commission. It works beautifully at home: about one in seven Kuwaiti shoppers buys from you.</p>
+      <p>Next door, Saudi Arabia is ten times the size and you have reached <b>under one percent of it</b>. Almost all your creators are Kuwaiti, which is precisely why.</p>
+      <p>Over ${st.rounds} years you decide how to grow: build the creator network out, put products in real shops, or take the model abroad. The board will value the business at the end. Par is <b>$${PAR}M</b>.</p>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">The thing to understand first</div>
+      <p class="small">Your reach in a country is not about how many creators you have. It is about <b>how many creators you have per shopper in that country</b>. Seven hundred creators in Kuwait is saturation. One hundred creators in Saudi Arabia is a rounding error.</p>
+      <p class="small">Creators can only be signed where you have a real local operation. A market you merely ship to from Kuwait can never build one.</p>
+    </div>
+  </div><div>
+    ${valueBar()}
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Three ways to be in a market</div>
+      ${Object.keys(MODES).map(k=>`<div style="margin-bottom:11px">
+        <h3>${MODES[k].label}</h3>
+        <p class="small muted" style="margin:3px 0">${MODE_NOTES[k]}</p>
+        <div class="stats">Reach ceiling <b>${Math.round(MODES[k].ceilMul*100)}%</b> of what the market allows${k==='PARTNER'?' · you keep <b>12%</b> of sales':''}</div></div>`).join('')}
+    </div>
+    <div class="panel">
+      <div class="eyebrow">Three things that will catch you out</div>
+      <p class="small"><b>Creators are not employees.</b> Rivals bid for them. If your commission drifts below the going rate they leave, and they take their audience with them.</p>
+      <p class="small"><b>Your own labels compete with your suppliers.</b> Push them too far up the shelf and the international brands pull their exclusives — which is what made you worth visiting.</p>
+      <p class="small"><b>A shop is a skill you do not have yet.</b> Opening a flagship before you can merchandise one damages the brand whose name is over the door.</p>
+    </div>
+  </div></div>`;
+}
+
+function viewData(){
+  const st=UI.run, y=st.finished?st.rounds:st.year;
+  const rows=MARKETS.map(m=>{
+    const ms=st.markets[m.id];
+    const pop=m.pop*Math.pow(1+m.growth/100,y-1);
+    const ceil=ceilingFor(m,st);
+    const status=ms.status==='active'?MODES[ms.mode].label:ms.status==='exited'?'Withdrawn':'Not present';
+    const inf=headcount(ms.inf);
+    const density=inf/Math.max(0.1,pop);
+    return `<tr>
+      <td><b>${esc(m.name)}</b><div class="small muted">${m.region}</div></td>
+      <td class="num">${pop.toFixed(1)}M</td>
+      <td class="num">$${m.aov}</td>
+      <td class="num">${Math.round(m.affinity*100)}%</td>
+      <td>${riskDot(Math.round(6-m.prox*5))}${m.prox>=0.85?'Very close':m.prox>=0.65?'Close':m.prox>=0.4?'Distant':'Very distant'}</td>
+      <td>${riskDot(Math.min(5,m.rivalry))}${LEVEL[m.rivalry]}</td>
+      <td class="num">${ceil.toFixed(1)}%</td>
+      <td class="num ${ms.status==='active'?'':'muted'}">${ms.status==='active'?ms.pen.toFixed(2)+'%':'—'}</td>
+      <td class="num">${ms.status==='active'?inf.toLocaleString()+(density>0?'<div class="small muted">'+density.toFixed(0)+' per M':''):''}</td>
+      <td>${ms.status==='active'?`<span class="tag hot">${status}</span>`:`<span class="tag">${status}</span>`}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="panel">
+    <div class="eyebrow">Markets — Year ${y}</div>
+    <p class="small muted" style="margin-top:6px">Social buying is the share of online shoppers in that country who buy through social channels. Closeness is how well Gulf creator culture, tastes and language carry over. The reach ceiling is the most of the market you could ever hold, and creators per million shoppers is how close you are to filling it.</p>
+    <div style="overflow-x:auto"><table style="margin-top:10px;min-width:900px"><thead><tr>
+      <th>Country</th><th>Shoppers</th><th>Basket</th><th>Social buying</th><th>Closeness</th><th>Competition</th><th>Reach ceiling</th><th>You hold</th><th>Creators</th><th>Presence</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="small muted" style="margin-top:10px">Where social buying is low and closeness is very distant, the ceiling collapses — the model itself does not travel there, however much you spend.</p>
+  </div>`;
+}
+
+function viewNews(){
+  const st=UI.run;
+  if(st.finished) return `<div class="panel"><p>The run is over. See the final scorecard.</p></div>`;
+  const net=networkTotal(st);
+  return `<div class="grid g2"><div class="panel">
+    <div class="eyebrow">Before Year ${st.year}</div>
+    <div style="margin-top:12px">${st.news.map(n=>`<div class="news ${n.tag==='Breaking'?'crisis':n.tag==='Risk watch'?'':'calm'}">
+      <span class="tag ${n.tag==='Breaking'?'bad':n.tag==='Risk watch'?'warn':''}">${n.tag}</span>
+      <p style="margin-top:6px">${esc(n.text)}</p></div>`).join('')}</div>
+  </div><div>${valueBar()}
+    <div class="panel" style="margin-top:14px"><div class="eyebrow">Your position</div>
+      <table style="margin-top:8px"><tbody>
+        <tr><td>Cash</td><td class="num">$${money(st.cash)}</td></tr>
+        <tr><td>Creators on the roster</td><td class="num">${(net.hero+net.mid+net.micro).toLocaleString()}</td></tr>
+        <tr><td>You pay them</td><td class="num">${st.commission.toFixed(1)}%</td></tr>
+        <tr><td>The market now pays them</td><td class="num ${st.marketRate>st.commission+1?'warnc':''}">${st.marketRate.toFixed(1)}%</td></tr>
+        <tr><td>Brand partner relationship</td><td class="num ${st.brandRel<45?'neg':''}">${Math.round(st.brandRel)}/100</td></tr>
+        <tr><td>Shop-running skill</td><td class="num">${Math.round(st.vm)}/100</td></tr>
+      </tbody></table>
+    </div></div></div>`;
+}
+
+/* ---------------- decisions ---------------- */
+function setD(k,v){ UI.draft[k]=(typeof v==='string'&&isNaN(+v))?v:+v; schedulePaint(paintDecisions); }
+function setBranding(v){ UI.draft.plBranding=v; render(); }
+function toggleUpgrade(id){ const a=UI.draft.upgrades,i=a.indexOf(id); i<0?a.push(id):a.splice(i,1); repaintMarkets(); }
+function toggleExitM(id){ const a=UI.draft.exits,i=a.indexOf(id); i<0?a.push(id):a.splice(i,1); repaintMarkets(); }
+function setEntryM(id,mode){ if(mode) UI.draft.entries[id]=mode; else delete UI.draft.entries[id]; paintDecisions(); }
+function pickShop(k,v){ UI.shopPick[k]=v; render(); }
+function addShop(){ UI.draft.stores.push(Object.assign({},UI.shopPick)); render(); }
+function dropShop(i){ UI.draft.stores.splice(i,1); render(); }
+function closeShop(i){ const a=UI.draft.closeStores,j=a.indexOf(i); j<0?a.push(i):a.splice(j,1); render(); }
+
+function repaintMarkets(){
+  if(!repaint('mkgrid', marketCardsHTML())) return render();
+  paintDecisions();
+}
+function draftSpend(){
+  let c=0;
+  Object.keys(UI.draft.entries).forEach(id=>c+=entryCost(id,UI.draft.entries[id]));
+  UI.draft.upgrades.forEach(id=>c+=Math.round(MODES.LOCAL.entry*marketDef(id).entryScale*0.9*10)/10);
+  UI.draft.stores.forEach(s=>c+=STORE_TYPES[s.type].fitout*(s.tier==='premium'?1.3:1));
+  if(UI.draft.plBranding!==UI.run.plBranding) c+=6;
+  return c;
+}
+function paintDecisions(){
+  const st=UI.run,d=UI.draft;
+  const set=(id,html)=>{ const e=document.getElementById(id); if(e) e.innerHTML=html; };
+  const txt=(id,t)=>{ const e=document.getElementById(id); if(e) e.textContent=t; };
+  txt('v-commission',d.commission.toFixed(1)+'%'); txt('v-recruit',d.recruit); txt('v-mix',d.mix);
+  txt('v-academy',d.academy); txt('v-plShare',d.plShare+'%'); txt('v-brandInvest',d.brandInvest);
+  txt('v-deliveryFee','$'+d.deliveryFee); txt('v-warehouse',d.warehouse); txt('v-marketing',d.marketing);
+  txt('v-retailCap',d.retailCap);
+
+  const gap=st.marketRate-d.commission;
+  let churn=0.10+Math.max(0,gap)*0.035-(st.academy/100)*0.05;
+  if(d.plShare>25) churn-=0.02;
+  if(st.stores.length>=5&&st.vm<40) churn+=0.05;
+  churn=clamp(churn,0.03,0.55);
+  const budget=(d.recruit/100)*70;
+  set('creator-read',`Signing budget <b>$${budget.toFixed(0)}M</b> · you pay <b>${d.commission.toFixed(1)}%</b> against a market rate of <b>${st.marketRate.toFixed(1)}%</b><br>
+    Expected departures this year: <b class="${churn>0.2?'neg':churn>0.14?'warnc':'pos'}">${Math.round(churn*100)}%</b> of the roster`);
+  set('mix-read',d.mix<30?'Weighted to headline names: enormous audiences, few of them act, and losing one hurts.'
+    :d.mix>65?'Weighted to micro-influencers: small audiences that convert hard, cheap to sign, and no single departure matters.'
+    :'A balanced roster.');
+  const gm=(0.33+0.18*(d.plShare/100)+(st.brandRel<40?-0.05:0)+(d.plBranding==='personal'?0.01:0))*100;
+  set('merch-read',`Gross margin on what you sell: <b>${gm.toFixed(0)}%</b> · brand partner relationship <b>${Math.round(st.brandRel)}/100</b>
+    ${d.plShare>40?'<br><span class="neg">Above 40% your partners start to see you as a competitor.</span>':''}`);
+  set('service-read',`You charge <b>$${d.deliveryFee}</b> for delivery. ${d.warehouse>65?'A spread-out warehouse network: faster and dearer.':d.warehouse<35?'A centralised network: cheap, and slower everywhere that is not Kuwait.':'A middling network.'}
+    <br>Shop-running skill is <b>${Math.round(st.vm)}/100</b> and will move to about <b>${Math.round(clamp(st.vm+(d.retailCap/100)*24-5,0,100))}</b> next year.`);
+  const spend=draftSpend();
+  set('spend-read',`One-off spending this year: <b>$${spend.toFixed(1)}M</b> against <b>$${money(st.cash)}</b> of cash.`);
+}
+
+function viewDecisions(){
+  const st=UI.run,d=UI.draft;
+  if(st.finished) return `<div class="panel"><p>The run is over. See the final scorecard.</p></div>`;
+  const net=networkTotal(st);
+  return viewDecisionsBody(st,d,net);
+}
+function marketCardsHTML(){
+  const st=UI.run, d=UI.draft;
+  return MARKETS.map(m=>{
+    const ms=st.markets[m.id];
+    if(ms.status==='exited') return `<div class="mcard dead"><h3>${esc(m.name)} <span class="tag">Withdrawn</span></h3></div>`;
+    if(ms.status==='active'){
+      const up=d.upgrades.includes(m.id), ex=d.exits.includes(m.id);
+      const upCost=Math.round(MODES.LOCAL.entry*marketDef(m.id).entryScale*0.9*10)/10;
+      return `<div class="mcard active"><h3>${esc(m.name)} <span class="tag hot">${ms.mode==='LOCAL'?'Local':ms.mode==='CROSS'?'Cross-border':'Licensed'}</span></h3>
+        <div class="stats">You hold <b>${ms.pen.toFixed(2)}%</b> of a <b>${(ceilingFor(m,st)*MODES[ms.mode].ceilMul).toFixed(1)}%</b> ceiling · <b>${headcount(ms.inf).toLocaleString()}</b> creators</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          ${ms.mode==='CROSS'?`<button class="sm ${up?'primary':''}" onclick="toggleUpgrade('${m.id}')">${up?'Building ✓':'Build local operation · $'+upCost+'M'}</button>`:''}
+          ${m.home?'':`<button class="sm ${ex?'primary':'danger'}" onclick="toggleExitM('${m.id}')">${ex?'Leaving ✓':'Withdraw'}</button>`}
+        </div></div>`;
+    }
+    const sel=d.entries[m.id]||'';
+    return `<div class="mcard"><h3>${esc(m.name)}</h3>
+      <div class="stats">Ceiling <b>${ceilingFor(m,st).toFixed(1)}%</b> · social buying ${Math.round(m.affinity*100)}% · ${m.prox>=0.65?'culturally close':'culturally distant'}</div>
+      <select style="margin-top:8px" onchange="setEntryM('${m.id}',this.value)">
+        <option value="">Stay out</option>
+        ${['LOCAL','CROSS','PARTNER'].map(k=>`<option value="${k}" ${sel===k?'selected':''}>${MODES[k].label} — $${entryCost(m.id,k)}M</option>`).join('')}
+      </select></div>`;
+  }).join('');
+}
+function viewDecisionsBody(st,d,net){
+  const sl=(k,label,hint,min,max,step)=>`<div class="sl">
+    <div class="lab"><span>${label}</span><span class="val" id="v-${k}">${d[k]}</span></div>
+    <div class="hint">${hint}</div>
+    <input type="range" min="${min}" max="${max}" step="${step}" value="${d[k]}" oninput="setD('${k}',this.value)"></div>`;
+
+  const activeIds=Object.keys(st.markets).filter(id=>st.markets[id].status==='active');
+  const t=STORE_TYPES[UI.shopPick.type], mall=MALLS[UI.shopPick.tier];
+  const shopCost=t.fitout*(UI.shopPick.tier==='premium'?1.3:1);
+  const rentY=(t.sqm*mall.rent)/1e6;
+
+  return `<div class="panel">
+    <div class="eyebrow">Step 1 · The creator network</div>
+    <div class="grid g2" style="margin-top:12px">
+      <div>
+        ${sl('recruit','Signing budget','How much you spend bringing new creators on. It is split across the markets where you have a local operation.',0,100,5)}
+        ${sl('commission','Commission you pay them','Their cut of every sale. The going rate rises every year and rivals bid it up.',4,16,0.5)}
+      </div>
+      <div>
+        ${sl('mix','Headline names ← → micro-influencers','Who you sign. Micro-influencers are far cheaper and convert harder; headline names carry reach and risk.',0,100,5)}
+        ${sl('academy','Influencer academy','Training, account managers, events. Raises what each creator sells and keeps them from leaving.',0,100,5)}
+      </div>
+    </div>
+    <div class="small" id="creator-read" style="margin-top:6px"></div>
+    <div class="small muted" id="mix-read" style="margin-top:4px"></div>
+    <div class="stats" style="margin-top:8px">On the roster now — headline <b>${net.hero.toLocaleString()}</b> · established <b>${net.mid.toLocaleString()}</b> · micro <b>${net.micro.toLocaleString()}</b></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Step 2 · What you sell</div>
+    <div class="grid g2" style="margin-top:12px">
+      <div>
+        ${sl('plShare','Your own labels, share of the shelf','Better margin than the international brands. Too much of it and those brands stop giving you exclusives.',0,60,5)}
+        ${sl('brandInvest','Investment in brand partnerships','Buying exclusives and keeping the international houses close.',0,100,5)}
+      </div>
+      <div>
+        <div class="sl"><div class="lab"><span>How your own labels are branded</span></div>
+        <div class="hint">The choice you made early on. Changing it means repackaging the whole range for $6M.</div>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="sm ${d.plBranding==='personal'?'primary':''}" onclick="setBranding('personal')">Under the creator's own name</button>
+          <button class="sm ${d.plBranding==='neutral'?'primary':''}" onclick="setBranding('neutral')">Under neutral house names</button>
+        </div>
+        <p class="small muted" style="margin-top:8px">${d.plBranding==='personal'
+          ? 'Creators love seeing their name on a bottle. Their followers, oddly, buy less of it — and nobody outside the fandom buys it at all.'
+          : 'Names like Moon, Haze and Sun. Creators still earn from what they helped make, but anyone will buy it.'}</p></div>
+      </div>
+    </div>
+    <div class="small" id="merch-read" style="margin-top:6px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Step 3 · Service and demand</div>
+    <div class="grid g2" style="margin-top:12px">
+      <div>
+        ${sl('deliveryFee','Delivery fee you charge','You have never offered free delivery. Charging less lifts conversion and costs you real money.',0,15,0.5)}
+        ${sl('warehouse','Centralised ← → spread out','More warehouses mean next-day delivery in more places, and a much larger fixed cost.',0,100,5)}
+      </div>
+      <div>
+        ${sl('marketing','Paid marketing','You have barely used it. It works, but far less efficiently than a creator does.',0,100,5)}
+        ${sl('retailCap','Shop-running and omnichannel skill','Visual merchandising, store operations, and letting creators see what sold offline. Builds up over years.',0,100,5)}
+      </div>
+    </div>
+    <div class="small" id="service-read" style="margin-top:6px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Step 4 · Where you operate</div>
+    <div class="grid g3" id="mkgrid" style="margin-top:12px">${marketCardsHTML()}</div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Step 5 · Shops</div>
+    ${st.stores.length?`<table style="margin-top:10px"><thead><tr><th>Shop</th><th>Where</th><th>Mall</th><th>Opened</th><th></th></tr></thead><tbody>
+      ${st.stores.map((s,i)=>`<tr><td>${STORE_TYPES[s.type].label}</td><td>${esc(marketDef(s.market).name)}</td>
+        <td>${MALLS[s.tier].label}</td><td class="num">Year ${s.opened}</td>
+        <td><button class="sm ${d.closeStores.includes(i)?'primary':'danger'}" onclick="closeShop(${i})">${d.closeStores.includes(i)?'Closing ✓':'Close'}</button></td></tr>`).join('')}
+    </tbody></table>`:'<p class="small muted" style="margin-top:8px">You have no shops. Everything sells through the app.</p>'}
+    <div class="hr"></div>
+    <div class="grid g3">
+      <label class="fld"><span>Type of shop</span><select onchange="pickShop('type',this.value)">
+        ${Object.values(STORE_TYPES).map(x=>`<option value="${x.key}" ${UI.shopPick.type===x.key?'selected':''}>${x.label} (${x.sqm} sqm)</option>`).join('')}
+      </select></label>
+      <label class="fld"><span>Country</span><select onchange="pickShop('market',this.value)">
+        ${activeIds.map(id=>`<option value="${id}" ${UI.shopPick.market===id?'selected':''}>${esc(marketDef(id).name)}</option>`).join('')}
+      </select></label>
+      <label class="fld"><span>Mall</span><select onchange="pickShop('tier',this.value)">
+        ${Object.values(MALLS).map(x=>`<option value="${x.key}" ${UI.shopPick.tier===x.key?'selected':''}>${x.label} — $${x.rent}/sqm a year</option>`).join('')}
+      </select></label>
+    </div>
+    <p class="small muted">Fit-out $${shopCost.toFixed(2)}M now, then about $${(rentY+t.staff).toFixed(2)}M a year in rent and staff. This shop needs a shop-running skill of at least <b>${t.vmNeed}</b> to work; yours is <b>${Math.round(st.vm)}</b>.</p>
+    <button class="sm" onclick="addShop()">Add this shop to the plan</button>
+    ${d.stores.length?`<div style="margin-top:10px">${d.stores.map((s,i)=>`<span class="tag hot" style="margin-right:6px">${STORE_TYPES[s.type].label}, ${esc(marketDef(s.market).name)} <button class="sm ghost" style="padding:0 4px;border:none" onclick="dropShop(${i})">✕</button></span>`).join('')}</div>`:''}
+  </div>
+
+  <div class="panel center">
+    <div class="small" id="spend-read" style="margin-bottom:10px"></div>
+    <button class="primary" style="font-size:16px;padding:12px 26px" onclick="submitYear()">Run Year ${st.year}</button>
+    <p class="small muted" style="margin-top:8px">Once you run the year you cannot change these decisions.</p>
+  </div>`;
+}
+
+function viewResults(){
+  const st=UI.run,h=st.history;
+  if(!h.length) return `<div class="panel"><p class="muted">No results yet. Make your Year 1 decisions first.</p></div>`;
+  const last=UI.lastYear||h[h.length-1];
+  const labels=h.map(x=>'Y'+x.year);
+  const events=last.log.filter(l=>['crisis','warn','move'].includes(l.type));
+
+  const rows=Object.keys(last.byMarket).map(id=>{
+    const b=last.byMarket[id];
+    return `<tr><td>${esc(marketDef(id).name)}</td><td class="small">${b.mode==='LOCAL'?'Local':b.mode==='CROSS'?'Cross-border':'Licensed'}</td>
+      <td class="num">${b.pen.toFixed(2)}%</td><td class="num">${(b.customers/1000).toFixed(0)}k</td>
+      <td class="num">${b.influencers.toLocaleString()}</td><td class="num">${b.leadDays.toFixed(1)}d</td>
+      <td class="num">$${money(b.gmv)}</td><td class="num ${b.profit>=0?'pos':'neg'}">${sgn(b.profit)}</td></tr>`;
+  }).join('');
+
+  return `<div class="panel">
+    <div class="eyebrow">Year ${last.year} results</div>
+    <div class="grid g4" style="margin-top:12px">
+      ${[['Sales through the platform','$'+money(last.gmv),''],['Revenue','$'+money(last.revenue),''],
+         ['Operating profit',sgn(last.ebitda),last.ebitda>=0?'pos':'neg'],
+         ['Cash','$'+money(last.cash),last.cash<60?'neg':'']]
+        .map(([k,v,c])=>`<div class="panel tight" style="margin:0"><div class="eyebrow">${k}</div><div class="num ${c}" style="font-size:24px;font-weight:750;margin-top:4px">${v}</div></div>`).join('')}
+    </div>
+    ${events.length?`<div style="margin-top:14px">${events.map(l=>`<div class="news ${l.type==='crisis'?'crisis':l.type==='warn'?'crisis':'calm'}">
+      <span class="tag ${l.type==='crisis'?'bad':l.type==='warn'?'warn':''}">${l.type==='crisis'?'Event':l.type==='warn'?'Warning':'Done'}</span>
+      <p style="margin-top:6px">${esc(l.text)}</p></div>`).join('')}</div>`:''}
+    <div class="hr"></div>
+    <h3>What your year says</h3>
+    <ul class="feedback small" style="margin-top:8px">${feedback(st,last).map(f=>`<li>${f}</li>`).join('')}</ul>
+  </div>
+
+  <div class="grid g2">
+    <div class="chartbox"><h3>Revenue and operating profit</h3>
+      ${chartLines(labels,[{values:h.map(x=>x.revenue),color:'#F4511E'},{values:h.map(x=>x.ebitda),color:'#0C7A63'}],v=>'$'+money(v),true)}
+      <div class="small muted" style="margin-top:6px"><span style="color:#F4511E">■</span> Revenue &nbsp; <span style="color:#0C7A63">■</span> Operating profit</div></div>
+    <div class="chartbox"><h3>Creators on the roster</h3>
+      ${chartBars(labels,h.map(x=>x.network.hero+x.network.mid+x.network.micro),v=>Math.round(v/1000)+'k')}</div>
+    <div class="chartbox"><h3>What you pay creators against the market</h3>
+      ${chartLines(labels,[{values:h.map(()=>st.commission),color:'#F4511E'},{values:h.map(x=>x.marketRate),color:'#A86400'}],v=>v.toFixed(1)+'%')}
+      <div class="small muted" style="margin-top:6px"><span style="color:#F4511E">■</span> You &nbsp; <span style="color:#A86400">■</span> The market</div></div>
+    <div class="chartbox"><h3>Brand partners and shop-running skill</h3>
+      ${chartLines(labels,[{values:h.map(x=>x.brandRel),color:'#8E6BB5'},{values:h.map(x=>x.vm),color:'#1D2A3D'}],v=>Math.round(v)+'')}
+      <div class="small muted" style="margin-top:6px"><span style="color:#8E6BB5">■</span> Brand partners &nbsp; <span style="color:#1D2A3D">■</span> Shop-running skill</div></div>
+  </div>
+
+  <div class="panel"><div class="eyebrow">Country by country, Year ${last.year}</div>
+    <div style="overflow-x:auto"><table style="margin-top:10px;min-width:720px"><thead><tr><th>Country</th><th>Presence</th><th>You hold</th><th>Customers</th><th>Creators</th><th>Delivery</th><th>Sales</th><th>Contribution</th></tr></thead>
+    <tbody>${rows}</tbody></table></div></div>
+
+  <div class="panel"><div class="eyebrow">Profit and loss, Year ${last.year}</div>
+    <table style="margin-top:10px"><tbody>
+      <tr><td>Revenue${last.royalty>0.5?' (including $'+money(last.royalty)+' of royalties)':''}</td><td class="num">$${money(last.revenue)}</td></tr>
+      <tr><td>Cost of goods</td><td class="num">-$${money(last.cogs)}</td></tr>
+      <tr><td>Commission to creators</td><td class="num">-$${money(last.commissionCost)}</td></tr>
+      <tr><td>Delivery and warehouses</td><td class="num">-$${money(last.deliveryCost+last.warehouseCost)}</td></tr>
+      <tr><td>Managing the creator network</td><td class="num">-$${money(last.accountMgmt+last.academyCost)}</td></tr>
+      <tr><td>Signing new creators</td><td class="num">-$${money(last.recruitBudget)}</td></tr>
+      <tr><td>Brand partnerships, retail skill, marketing</td><td class="num">-$${money(last.brandCost+last.retailCost+last.marketingCost)}</td></tr>
+      <tr><td>Shops</td><td class="num">-$${money(last.storeCost)}</td></tr>
+      <tr><td>Running the company</td><td class="num">-$${money(last.corporate)}</td></tr>
+      <tr><td><b>Operating profit</b></td><td class="num ${last.ebitda>=0?'pos':'neg'}"><b>${sgn(last.ebitda)}</b></td></tr>
+      <tr><td>Spent on warehouses, shops and new markets</td><td class="num">-$${money(last.capex)}</td></tr>
+      ${last.emergency?`<tr><td class="neg">Emergency funding from shareholders</td><td class="num neg">+$${money(last.emergency)}</td></tr>`:''}
+      <tr><td><b>Cash at year end</b></td><td class="num"><b>$${money(last.cash)}</b></td></tr>
+    </tbody></table></div>
+  ${st.finished?`<div class="panel center"><button class="primary" onclick="UI.tab='end';render()">See your final scorecard</button></div>`
+    :`<div class="panel center"><button class="primary" onclick="UI.tab='news';render()">Read the news for Year ${st.year}</button></div>`}`;
+}
+
+function feedback(st,last){
+  const f=[];
+  const gap=last.marketRate-st.commission;
+  if(gap>1.5) f.push(`You are paying creators ${gap.toFixed(1)} points below the going rate and ${Math.round(last.churn*100)}% of them left this year. Every one that goes takes an audience you paid to build.`);
+  else if(gap<-1.5) f.push('You are paying creators well above the market. Loyalty is excellent and it is costing you real margin — check whether the extra sales justify it.');
+  if(last.margin<-5) f.push(`You lost ${Math.abs(last.margin).toFixed(0)} cents on every dollar of revenue. Look at the value bar: something is taking more than it gives back.`);
+  else if(last.margin>8) f.push(`An operating margin of ${last.margin.toFixed(0)}% is strong for this business.`);
+  const ksa=last.byMarket.ksa;
+  if(ksa && ksa.pen<3) f.push(`Saudi Arabia is still at ${ksa.pen.toFixed(2)}% with ${ksa.influencers.toLocaleString()} creators for ${(marketDef('ksa').pop).toFixed(0)} million shoppers. Reach there is a function of creator density, and nothing else you can buy will substitute for it.`);
+  const slow=Object.keys(last.byMarket).filter(id=>last.byMarket[id].leadDays>7);
+  if(slow.length) f.push(`Delivery still takes over a week in ${slow.map(id=>marketDef(id).name).join(', ')}. Shoppers there order roughly half as often as Kuwaitis do.`);
+  if(st.brandRel<50) f.push('Your international brand partners have cooled. Exclusives are what make you worth visiting rather than cheaper; losing them shrinks the basket.');
+  if(st.stores.length && st.vm<40) f.push('You are running shops with almost no shop-running skill. They sell about half what they should and the ones with your name over the door are costing you brand equity.');
+  const conc=last.conc;
+  if(conc>0.35) f.push(`Around ${Math.round(conc*100)}% of your reach sits with headline names. That is a concentrated bet on people who can be bought.`);
+  if(last.cannibal>1) f.push(`About $${money(last.cannibal)} of shop sales came out of the app rather than adding to it. Some of that is unavoidable; all of it is invisible to creators unless you build the systems.`);
+  return f;
+}
+
+/* ---------------- final ---------------- */
+function viewEnd(sc){
+  const st=UI.run, net=networkTotal(st);
+  const band={A:'Outstanding',B:'Solid',C:'Mixed',D:'Weak'}[sc.grade];
+  const rows=MARKETS.filter(m=>st.markets[m.id].status!=='none').map(m=>{
+    const ms=st.markets[m.id];
+    return `<tr><td>${esc(m.name)}</td><td>${ms.status==='active'?(ms.mode==='LOCAL'?'Local operation':ms.mode==='CROSS'?'Cross-border':'Licensed'):'Withdrawn'}</td>
+      <td class="num">${ms.pen.toFixed(2)}%</td><td class="num">${headcount(ms.inf).toLocaleString()}</td>
+      <td class="num">$${money(ms.gmv)}</td></tr>`;
+  }).join('');
+  const code=btoa(unescape(encodeURIComponent(JSON.stringify(resultRecord()))));
+  return `<div class="panel center">
+    <div class="eyebrow">What the board says the business is worth</div>
+    <div class="scorebig ${sc.ev>=PAR?'pos':''}" style="margin:10px 0">$${sc.ev>=1000?(sc.ev/1000).toFixed(2)+'B':Math.round(sc.ev)+'M'}</div>
+    <div><span class="tag ${sc.grade==='A'?'good':sc.grade==='D'?'bad':''}">${sc.grade} · ${band}</span><span class="tag">Par $${PAR}M</span></div>
+    <p class="small muted" style="margin-top:12px;max-width:660px;margin-left:auto;margin-right:auto">
+      ${sc.ebitda>0
+        ? `Operating profit of $${money(sc.ebitda)} valued at ${sc.mult.toFixed(1)}× — a multiple earned by how durable the business looks, not by its size — plus $${money(sc.cash)} of cash.`
+        : `You finished without an operating profit, so the business was valued on revenue alone plus what cash was left.`}
+      ${st.meta.rescued?' A shareholder rescue along the way cost you value.':''}</p>
+  </div>
+  <div class="grid g4">
+    ${[['Revenue','$'+money(sc.revenue),''],['Operating profit',sgn(sc.ebitda),sc.ebitda>=0?'pos':'neg'],
+       ['Operating margin',sc.margin.toFixed(1)+'%',sc.margin>=0?'pos':'neg'],['Cash','$'+money(sc.cash),''],
+       ['Creators',(net.hero+net.mid+net.micro).toLocaleString(),''],['Markets',sc.markets+'',''],
+       ['Shops',sc.stores+'',''],['Brand partners',Math.round(sc.brandRel)+'/100',sc.brandRel<45?'neg':'']]
+      .map(([k,v,c])=>`<div class="panel tight"><div class="eyebrow">${k}</div><div class="num ${c}" style="font-size:22px;font-weight:750;margin-top:4px">${v}</div></div>`).join('')}
+  </div>
+  <div class="panel"><div class="eyebrow">Where you ended up</div>
+    <table style="margin-top:10px"><thead><tr><th>Country</th><th>Presence</th><th>Share held</th><th>Creators</th><th>Sales</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="panel"><div class="eyebrow">Send your result to your instructor</div>
+    <p class="small" style="margin-top:6px">${UI.submitted?'Your result has been sent.':'Sending…'} If your instructor cannot see it, give them this code.</p>
+    <textarea readonly style="width:100%;height:70px;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:8px;padding:8px">${code}</textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="navigator.clipboard&&navigator.clipboard.writeText(this.parentNode.previousElementSibling.value).then(()=>toast('Code copied.'))">Copy code</button>
+      ${UI.runsUsed+1 < UI.session.limit?`<button class="primary" onclick="startRun()">Play again (${UI.session.limit-UI.runsUsed-1} left)</button>`:'<span class="tag">No runs left</span>'}
+    </div></div>`;
+}
+function resultRecord(){
+  const st=UI.run, sc=score(st), net=networkTotal(st);
+  const ksa=st.markets.ksa;
+  return {
+    name:UI.student, year:st.year>st.rounds?st.rounds:st.year, finished:st.finished,
+    ev:+sc.ev.toFixed(1), grade:sc.grade, finalRevenue:sc.revenue, finalProfit:sc.ebitda,
+    margin:sc.margin, cumProfit:sc.cumProfit, cash:sc.cash, confidence:Math.round(sc.moat*100),
+    stable:sc.markets, lost:0, quit:0, network:net.hero+net.mid+net.micro,
+    ksaPen:ksa?+ksa.pen.toFixed(2):0, brandRel:Math.round(sc.brandRel), stores:sc.stores,
+    runs:UI.runsUsed+1, updated:Date.now(),
+    flags:{ builtKsa: ksa && ksa.pen>=3, flagship: !!st.meta.flagship, upgraded: !!st.meta.upgraded,
+      wentFar: !!st.meta.wentFar, microHeavy: net.micro>net.mid, underpaid: st.commission < st.marketRate-1,
+      ownLabelHeavy: st.plShare>40, rescued: !!st.meta.rescued, profitable: sc.ebitda>0,
+      shopsWithoutSkill: st.stores.length>0 && st.vm<40 }
+  };
+}
+
+/* ============================================================
+   RESPONSIVENESS
+   The slow part was never the arithmetic — it was waiting for the
+   network. A year used to block on three round trips to the sheet
+   before anything appeared. Now the year resolves locally and the
+   save happens behind the scenes.
+   ============================================================ */
+const NET = { sessionAt: 0, saving: 0, savedAt: 0, failed: false };
+const SESSION_TTL = 25000;          // re-check the open/closed flag at most this often
+
+function cacheKey(){ return 'btq:cache:' + (UI.cls || '?'); }
+function cacheSession(s){
+  try{ lsSet(cacheKey(), JSON.stringify({ s, at: Date.now() })); }catch(e){}
+}
+function cachedSession(){
+  try{ const r = JSON.parse(lsGet(cacheKey()) || 'null'); return r ? r.s : null; }catch(e){ return null; }
+}
+
+/* Fetch the class record, but never make the player wait for it. */
+async function refreshSession(force){
+  if(!UI.cls) return UI.session;
+  if(!force && Date.now() - NET.sessionAt < SESSION_TTL) return UI.session;
+  NET.sessionAt = Date.now();
+  try{
+    const v = await S.get(sessionKey(UI.cls));
+    if(v){ UI.session = JSON.parse(v); cacheSession(UI.session); }
+  }catch(e){}
+  return UI.session;
+}
+
+/* Keep the open/closed flag fresh in the background while a student plays. */
+let pollTimer = null;
+function startSessionPoll(){
+  if(pollTimer) return;
+  pollTimer = setInterval(() => {
+    if(document.hidden) return;
+    const before = UI.session && UI.session.open;
+    refreshSession(true).then(() => {
+      const after = UI.session && UI.session.open;
+      if(before !== after) paintStatus();
+    });
+  }, SESSION_TTL);
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) refreshSession(true); });
+}
+
+/* One write per year instead of a read followed by a write. */
+function bestKey(){ return 'btq:best:' + (UI.cls || '?') + ':' + slug(UI.student || ''); }
+function saveResult(){
+  const rec = resultRecord();
+  try{
+    const prev = JSON.parse(lsGet(bestKey()) || 'null');
+    if(prev && prev.finished && rec.finished && prev.ev > rec.ev){
+      Object.assign(rec, prev, { runs: rec.runs, year: rec.year, finished: rec.finished });
+    }
+    if(rec.finished) lsSet(bestKey(), JSON.stringify(rec));
+  }catch(e){}
+  NET.saving++; paintStatus();
+  S.set(resPrefix(UI.cls) + slug(UI.student), JSON.stringify(rec))
+    .then(ok => { NET.failed = !ok; NET.savedAt = Date.now(); })
+    .catch(() => { NET.failed = true; })
+    .then(() => { NET.saving--; paintStatus(); });
+}
+
+/* A small status line, repainted on its own rather than re-rendering the page. */
+function statusHTML(){
+  if(!backendLive()) return '<span class="tag">Results stay on this device</span>';
+  if(NET.saving)  return '<span class="tag">Saving…</span>';
+  if(NET.failed)  return '<span class="tag bad">Could not save — use the result code at the end</span>';
+  if(NET.savedAt) return '<span class="tag good">Saved</span>';
+  return '';
+}
+function paintStatus(){
+  const e = document.getElementById('netstatus');
+  if(e) e.innerHTML = statusHTML();
+}
+
+/* Slider repaints are coalesced into one per animation frame. */
+let rafPending = false;
+function schedulePaint(fn){
+  if(rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; fn(); });
+}
+
+/* Repaint only the panel that changed, not the whole screen. */
+function repaint(id, html){
+  const e = document.getElementById(id);
+  if(e){ e.innerHTML = html; return true; }
+  return false;
+}
+
+/* ---------------- start-up ---------------- */
+async function boot(){
+  loadCfg();
+  UI.cls = CFG.cls || lsGet('btq:lastclass') || null;
+  UI.session = cachedSession();          // paint instantly from the last known state
+  render();
+  if(UI.cls){
+    await refreshSession(true);
+    render();
+    startSessionPoll();
+  }
+}
+async function loadSession(){
+  if(!UI.cls){ UI.session = null; return; }
+  await refreshSession(true);
+  if(UI.session) lsSet('btq:lastclass', UI.cls);
+}
+function render(){
+  if(!UI.cls || !UI.session) return renderJoin();
+  if(!UI.run) return renderLobby();
+  return renderGame();
+}
+async function joinClass(){
+  const c = ($('#cc').value || '').trim().toUpperCase();
+  if(c.length < 2) return toast('Enter the class code your instructor gave you.');
+  UI.cls = c;
+  const btn = document.getElementById('joinbtn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Checking…'; }
+  UI.session = null;
+  await refreshSession(true);
+  if(!UI.session){
+    toast('No class found with that code. Check the spelling with your instructor.');
+    UI.cls = null;
+    if(btn){ btn.disabled = false; btn.textContent = 'Continue'; }
+    return;
+  }
+  lsSet('btq:lastclass', UI.cls);
+  startSessionPoll();
+  render();
+}
+async function startRun(){
+  const nm = ($('#nm') ? $('#nm').value : UI.student).trim();
+  if(nm.length < 2) return toast('Please enter a name first.');
+  await refreshSession();                               // uses the cached value if it is fresh
+  if(!UI.session) return toast('That class could not be found.');
+  if(!UI.session.open){ render(); return toast('The game is not open yet. Wait for your instructor to start it.'); }
+  UI.student = nm;
+  let runs = 0;
+  try{ const p = JSON.parse(lsGet(bestKey()) || 'null'); if(p) runs = p.runs || 0; }catch(e){}
+  if(runs >= (UI.session.limit || 3)) return toast('You have used all ' + UI.session.limit + ' runs. Ask your instructor for more.');
+  UI.runsUsed = runs;
+  UI.run = newRun({ seed: UI.cls + '|' + slug(nm) + '|' + runs, rounds: UI.session.rounds, events: UI.session.events });
+  UI.run.meta = { maxStores:0, flagship:false, upgraded:false, wentFar:false, rescued:false };
+  UI.tab = 'brief'; UI.submitted = false; UI.lastYear = null;
+  newDraft(); render();
+}
+
+/* The year resolves at once. The save follows on its own. */
+function submitYear(){
+  if(UI.session && !UI.session.open){
+    toast('Your instructor has stopped the game. Wait for it to start again.');
+    refreshSession(true); return;
+  }
+  const st = UI.run;
+  st.meta.maxStores = Math.max(st.meta.maxStores || 0, st.stores.length + UI.draft.stores.length);
+  if(UI.draft.stores.some(s => s.type === 'flagship')) st.meta.flagship = true;
+  if(UI.draft.upgrades.length) st.meta.upgraded = true;
+  Object.keys(UI.draft.entries).forEach(id => { if(marketDef(id).prox < 0.4) st.meta.wentFar = true; });
+  const rec = resolveYear(st, UI.draft);
+  if(rec.emergency) st.meta.rescued = true;
+  UI.lastYear = rec; UI.tab = 'res';
+  if(!st.finished) newDraft();
+  render();
+  saveResult();
+  refreshSession();
+}
+
+boot();
+
+</script>
+</body>
+</html>

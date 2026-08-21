@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boutiqaat — Instructor Console</title>
+<style>
+:root{
+  --ink:#0E1726; --ink-2:#1D2A3D; --page:#E9ECF1; --panel:#FFFFFF; --line:#D3D9E3;
+  --accent:#F4511E; --accent-d:#C23B10; --accent-soft:#FDEDE7;
+  --pos:#0C7A63; --neg:#BE3327; --warn:#A86400; --muted:#65707F;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{margin:0;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+h1{font-size:30px} h2{font-size:20px} h3{font-size:15px}
+p{margin:0 0 10px}
+a{color:var(--accent-d)}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.panel.tight{padding:14px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr}}
+button{font-family:inherit;font-size:14px;font-weight:650;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 14px;cursor:pointer}
+button:hover{border-color:#9FA9B8}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{background:var(--accent-d);border-color:var(--accent-d)}
+button.ghost{background:transparent}
+button.danger{color:var(--neg);border-color:#E7BDB8}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.sm{padding:5px 10px;font-size:13px}
+input[type=text],input[type=password],input[type=number],select{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);width:100%}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
+label.fld{display:block;margin-bottom:10px}
+label.fld span{display:block;font-size:12px;font-weight:650;color:var(--muted);margin-bottom:4px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+tbody tr:hover{background:#F7F8FA}
+tfoot td{font-weight:750;border-top:2px solid var(--ink);border-bottom:none}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .warnc{color:var(--warn)}
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:5px;background:#EEF1F5;color:var(--muted)}
+.tag.hot{background:var(--accent-soft);color:var(--accent-d)}
+.tag.good{background:#E2F2EE;color:var(--pos)}
+.tag.bad{background:#FAE7E5;color:var(--neg)}
+.tag.warn{background:#FBF0DC;color:var(--warn)}
+
+/* masthead */
+.mast{background:var(--ink);color:#fff;padding:14px 0}
+.mast .wrap{padding-top:0;padding-bottom:0;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.mast h1{font-size:19px;color:#fff}
+.mast .sub{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#93A0B2}
+.hud{display:flex;gap:20px;flex-wrap:wrap}
+.hud div{text-align:right}
+.hud .k{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#93A0B2}
+.hud .v{font-family:var(--mono);font-size:17px;font-weight:700;color:#fff}
+
+/* tabs */
+.tabs{display:flex;gap:2px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:16px}
+.tabs button{border:none;background:none;border-radius:0;padding:11px 14px;color:var(--muted);font-weight:650;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* signature: investor mood instrument */
+.mood{background:var(--ink);border-radius:var(--r);padding:16px 18px;color:#fff}
+.mood .bar{position:relative;height:12px;border-radius:6px;background:linear-gradient(90deg,#7E2A1B,#A86400,#0C7A63);margin:12px 0 8px}
+.mood .pin{position:absolute;top:-6px;width:3px;height:24px;background:#fff;border-radius:2px;transition:left .5s ease}
+.mood .zone{position:absolute;top:-3px;height:18px;border:2px dashed rgba(255,255,255,.6);border-radius:6px;transition:all .6s ease}
+.mood .legend{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#93A0B2}
+.mood .reward{margin-top:10px;font-size:13px;color:#C9D3E0}
+.mood .reward b{color:#fff}
+
+/* market cards */
+.mcard{border:1px solid var(--line);border-radius:var(--r);padding:12px;background:#fff}
+.mcard.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft)}
+.mcard.dead{opacity:.5}
+.mcard h3{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.stats{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.7}
+.stats b{color:var(--ink);font-weight:600}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.r1{background:#0C7A63}.r2{background:#5C9A2E}.r3{background:#C79000}.r4{background:#D2691E}.r5{background:#BE3327}
+
+/* sliders */
+.opsrow{border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;background:#fff}
+.sl{margin-bottom:12px}
+.sl .lab{display:flex;justify-content:space-between;font-size:12.5px;font-weight:650;margin-bottom:2px}
+.sl .lab .val{font-family:var(--mono);color:var(--accent-d)}
+.sl .hint{font-size:11.5px;color:var(--muted);margin-bottom:4px}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.meter{height:8px;border-radius:4px;background:#EDF0F4;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent)}
+
+/* news */
+.news{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin-bottom:12px}
+.news.crisis{border-left-color:var(--neg)}
+.news.calm{border-left-color:var(--line)}
+
+.feedback li{margin-bottom:6px}
+.scorebig{font-family:var(--mono);font-size:52px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.hr{height:1px;background:var(--line);margin:16px 0}
+.hidden{display:none!important}
+.center{text-align:center}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.stack>*+*{margin-top:8px}
+.chartbox{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.chartbox h3{margin-bottom:8px}
+svg{display:block;width:100%;height:auto}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:8px;font-size:14px;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+
+/* ============================================================
+   BOUTIQAAT: THE INFLUENCE GAME — instructor console
+   ============================================================ */
+const CFG = { backend:'auto', api:'', key:'', cls:'' };
+
+function readParams(){
+  const out = {};
+  const grab = str => { if(!str) return; new URLSearchParams(str.replace(/^[#?]/,'')).forEach((v,k)=>out[k]=v); };
+  grab(location.search); grab(location.hash);
+  return out;
+}
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+
+function loadCfg(){
+  let saved = {};
+  try{ saved = JSON.parse(lsGet('btq:cfg')||'{}'); }catch(e){}
+  Object.assign(CFG, saved);
+  const p = readParams();
+  if(p.backend) CFG.backend = p.backend;
+  if(p.api) CFG.api = decodeURIComponent(p.api);
+  if(p.key) CFG.key = decodeURIComponent(p.key);
+  if(p.cls || p.class) CFG.cls = (p.cls||p.class).toUpperCase();
+  if(CFG.backend==='auto' && !hasArtifactStore() && CFG.api) CFG.backend='http';
+  if(CFG.backend==='auto' && !hasArtifactStore()) CFG.backend='offline';
+}
+function saveCfg(){ lsSet('btq:cfg', JSON.stringify(CFG)); }
+function hasArtifactStore(){ return typeof window!=='undefined' && window.storage && typeof window.storage.get==='function'; }
+function backendName(){
+  return { auto:'Claude chat storage', artifact:'Claude chat storage', http:'Shared server',
+           supabase:'Supabase', offline:'This browser only' }[CFG.backend] || CFG.backend;
+}
+function backendLive(){ return CFG.backend==='http' || CFG.backend==='supabase' || (CFG.backend!=='offline' && hasArtifactStore()); }
+
+const NETERR = { auth:false, fail:false };
+const mem = new Map();
+async function jpost(body){ return api(body); }
+
+/* ============================================================
+   TRANSPORT
+   Normally we POST. Some campus networks and browser extensions block
+   the cross-origin POST to script.google.com, which used to look like
+   "could not connect". If that happens we fall back to loading the
+   reply as a plain script, which nothing blocks. Every action on the
+   backend is available both ways.
+   ============================================================ */
+const TRANSPORT = { mode: 'auto' };          // auto -> fetch -> jsonp
+
+function cleanApi(v){
+  return String(v || '').replace(/[\u200B-\u200D\uFEFF]/g,'').trim().replace(/\/+$/,'');
+}
+function qs(params){
+  return Object.keys(params).filter(k => params[k] !== undefined && params[k] !== null)
+    .map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+}
+function jsonpCall(params){
+  return new Promise((resolve, reject) => {
+    const api = cleanApi(CFG.api);
+    if(!api) return reject(new Error('no address'));
+    const cb = '__sim_cb_' + Math.random().toString(36).slice(2);
+    const el = document.createElement('script');
+    let settled = false;
+    const cleanup = () => {
+      try{ delete window[cb]; }catch(e){ window[cb] = undefined; }
+      if(el.parentNode) el.parentNode.removeChild(el);
+    };
+    window[cb] = (data) => { settled = true; cleanup(); resolve(data); };
+    el.onerror = () => { if(!settled){ cleanup(); reject(new Error('script blocked')); } };
+    el.src = api + '?' + qs(params) + '&callback=' + cb;
+    document.head.appendChild(el);
+    setTimeout(() => { if(!settled){ cleanup(); reject(new Error('timed out')); } }, 20000);
+  });
+}
+async function fetchCall(params){
+  const url = cleanApi(CFG.api);
+  if(!url) throw new Error('no address');
+  const READS = { get:1, all:1, status:1, check:1 };
+  let r;
+  if(READS[params.action]){
+    r = await fetch(url + '?' + qs(params));              // reads stay on GET, as older backends expect
+  }else{
+    r = await fetch(url, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(params) });
+  }
+  const body = (typeof r.text === 'function') ? await r.text()
+             : (typeof r.json === 'function') ? JSON.stringify(await r.json()) : '';
+  try{ return JSON.parse(body); }
+  catch(e){ const err = new Error('not data'); err.body = body; err.status = r.status; throw err; }
+}
+/* One call, whichever way works. The winning route is remembered. */
+async function api(params){
+  if(TRANSPORT.mode !== 'jsonp'){
+    try{
+      const j = await fetchCall(params);
+      TRANSPORT.mode = 'fetch';
+      return j;
+    }catch(e){
+      if(TRANSPORT.mode === 'fetch') throw e;      // it worked before, so this is a real error
+      TRANSPORT.lastFetchError = e;                 // first attempt: try the other way
+    }
+  }
+  const j = await jsonpCall(params);
+  TRANSPORT.mode = 'jsonp';
+  return j;
+}
+
+const Adapters = {
+  artifact: {
+    async get(k){ try{ const r=await window.storage.get(k,true); return r?r.value:null; }catch(e){ return null; } },
+    async set(k,v){ try{ await window.storage.set(k,v,true); return true; }catch(e){ return false; } },
+    async del(k){ try{ await window.storage.delete(k,true); return true; }catch(e){ return false; } },
+    async all(prefix){ let keys=[]; try{ const r=await window.storage.list(prefix,true); keys=(r&&r.keys)||[]; }catch(e){}
+      const out=[]; for(const k of keys){ const v=await this.get(k); if(v!=null) out.push({key:k,value:v}); } return out; },
+  },
+  http: {
+    tk(){ return (typeof AUTH!=='undefined'&&AUTH.token)?AUTH.token:null; },
+    note(j){ if(typeof NETERR!=='undefined' && j && j.error==='auth') NETERR.auth=true; return j; },
+    async get(k){ try{ const j=this.note(await api({action:'get',key:k})); return (j&&j.value!=null)?j.value:null; }
+      catch(e){ return null; } },
+    async set(k,v){ try{ const j=this.note(await api({action:'set',key:k,value:v,token:this.tk()}));
+      const ok=!!(j&&j.ok!==false); if(!ok&&typeof NETERR!=='undefined') NETERR.fail=true; return ok; }
+      catch(e){ if(typeof NETERR!=='undefined') NETERR.fail=true; return false; } },
+    async del(k){ try{ await api({action:'del',key:k,token:this.tk()}); return true; }catch(e){ return false; } },
+    async all(prefix){ try{ const j=this.note(await api({action:'all',prefix:prefix,token:this.tk()}));
+      return j && j.items ? j.items : (j && j.error ? null : []); }catch(e){ return null; } },
+  },
+  supabase: {
+    hdr(){ return { apikey:CFG.key, Authorization:'Bearer '+CFG.key, 'Content-Type':'application/json' }; },
+    async get(k){ try{ const r=await fetch(CFG.api+'/rest/v1/sim_kv?select=value&key=eq.'+encodeURIComponent(k),{headers:this.hdr()});
+      const j=await r.json(); return (j&&j[0])?j[0].value:null; }catch(e){ return null; } },
+    async set(k,v){ try{ const r=await fetch(CFG.api+'/rest/v1/sim_kv',{method:'POST',
+      headers:Object.assign(this.hdr(),{Prefer:'resolution=merge-duplicates'}), body:JSON.stringify({key:k,value:v})}); return r.ok; }catch(e){ return false; } },
+    async del(k){ try{ await fetch(CFG.api+'/rest/v1/sim_kv?key=eq.'+encodeURIComponent(k),{method:'DELETE',headers:this.hdr()}); return true; }catch(e){ return false; } },
+    async all(prefix){ try{ const r=await fetch(CFG.api+'/rest/v1/sim_kv?select=key,value&key=like.'+encodeURIComponent(prefix+'*'),{headers:this.hdr()});
+      return await r.json()||[]; }catch(e){ return []; } },
+  },
+  offline: {
+    async get(k){ const v=lsGet(k); return v!=null?v:(mem.has(k)?mem.get(k):null); },
+    async set(k,v){ lsSet(k,v); mem.set(k,v); return true; },
+    async del(k){ lsDel(k); mem.delete(k); return true; },
+    async all(prefix){ const out=[]; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+      if(k&&k.startsWith(prefix)) out.push({key:k,value:localStorage.getItem(k)}); } }catch(e){
+      mem.forEach((v,k)=>{ if(k.startsWith(prefix)) out.push({key:k,value:v}); }); } return out; },
+  },
+};
+function A(){ const b = (CFG.backend==='auto'||CFG.backend==='artifact') ? (hasArtifactStore()?'artifact':'offline') : CFG.backend; return Adapters[b]||Adapters.offline; }
+const S = {
+  get:  k => A().get(k),
+  set:  (k,v) => A().set(k,v),
+  del:  k => A().del(k),
+  all:  p => A().all(p),
+};
+
+/* ---- keys are namespaced per class so semesters never collide ---- */
+const sessionKey = c => 'btq:'+c+':session';
+const resPrefix  = c => 'btq:'+c+':res:';
+
+const UI = {
+  role:null, session:null, student:'', run:null, tab:'brief', draft:null, cls:null, classes:[],
+  results:[], busy:false, lastYear:null, submitted:false, runsUsed:0,
+};
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const root = () => document.getElementById('root');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40) || 'player';
+function money(m){ // $M in, human out
+  if (m === null || m === undefined || isNaN(m)) return '—';
+  const a = Math.abs(m);
+  if (a >= 1000) return (m/1000).toFixed(a>=10000?0:2)+'B';
+  return Math.round(m)+'M';
+}
+const sgn = m => (m>=0?'':'-') + '$' + money(Math.abs(m));
+function toast(msg){
+  const t = document.createElement('div'); t.className='toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 3200);
+}
+const INDEX_KEY = 'btq:index';
+/* The list of classes is derived from the class records themselves whenever the
+   server answers. The index key is only a cache, so losing it loses nothing. */
+async function scanClasses(){
+  const items = await S.all('btq:');
+  if(!items) return null;                       // the request failed - say so, do not report "none"
+  const out = [];
+  items.forEach(it => {
+    if(!/:session$/.test(it.key)) return;
+    try{ const c = JSON.parse(it.value);
+      if(c && c.code) out.push({ code:c.code, title:c.title||c.code, created:c.created||0 }); }catch(e){}
+  });
+  return out.sort((a,b) => (b.created||0) - (a.created||0));
+}
+async function classIndex(){
+  const scan = await scanClasses();
+  if(scan){                                     // authoritative
+    if(scan.length) S.set(INDEX_KEY, JSON.stringify(scan.slice(0,60)));
+    return scan;
+  }
+  const v = await S.get(INDEX_KEY);             // fall back to the cache
+  try{ return v ? JSON.parse(v) : []; }catch(e){ return []; }
+}
+async function addToIndex(entry){
+  const v = await S.get(INDEX_KEY);
+  let ix = [];
+  try{ ix = v ? JSON.parse(v) : []; }catch(e){ ix = []; }
+  const i = ix.findIndex(x => x.code === entry.code);
+  if(i >= 0) ix[i] = entry; else ix.unshift(entry);
+  await S.set(INDEX_KEY, JSON.stringify(ix.slice(0,60)));
+}
+
+function renderInstructor(){
+  const s = UI.session;
+  if(!s) return renderInstructorSetup();
+  if(UI.pickClass) return renderClassPicker();
+  const ev = s.events;
+  const evLabels = {rivalPlatform:'A global social-commerce platform bids for your creators (Year 2)',
+    ksaOpening:'Saudi reform widens the prize (Year 3)',
+    heroExit:'Your best-known creators are poached (Year 3)',
+    brandAudit:'Brand partners review your own labels (Year 4)',
+    rentShock:'Premium mall rents jump (Year 4)',
+    customs:'Cross-border customs tighten (Year 5)'};
+  const rows = UI.results.slice().sort((a,b)=>(b.ev||0)-(a.ev||0));
+  const done = rows.filter(r=>r.finished);
+  const avg = done.length? done.reduce((a,b)=>a+b.ev,0)/done.length : 0;
+  const flagPct = f => done.length? Math.round(100*done.filter(r=>r.flags&&r.flags[f]).length/done.length) : 0;
+
+  root().innerHTML = `
+  <div class="mast"><div class="wrap">
+    <div><h1>Instructor console</h1><div class="sub">${esc(s.title)} · class ${esc(s.code)} · ${esc(backendName())}</div></div>
+    <div class="hud">
+      <div><div class="k">Play</div><div class="v" style="color:${s.open?'#5FD3A6':'#F08D7A'}">${s.open?'OPEN':'CLOSED'}</div></div>
+      <div><div class="k">Players</div><div class="v">${rows.length}</div></div>
+      <div><div class="k">Finished</div><div class="v">${done.length}</div></div>
+      <div><div class="k">Signed in</div><div class="v" style="font-size:13px">${esc(AUTH.id||'')} <button class="sm ghost" style="padding:2px 8px;margin-left:6px" onclick="authLogout()">Sign out</button></div></div>
+      <div><div class="k">Class average</div><div class="v">$${avg>=1000?(avg/1000).toFixed(2)+'B':Math.round(avg)+'M'}</div></div>
+    </div>
+  </div></div>
+  <div class="wrap">
+    <div class="panel">
+      <div class="eyebrow">Controls</div>
+      ${(!authLive()) ? `<div class="panel tight" style="background:#FBF0DC;border-color:#E8D3A8;margin-bottom:10px">
+        <span class="tag warn">Not connected to a server</span>
+        <p class="small" style="margin:8px 0 0">This class lives only in this browser. It will not reach your students, and the
+        browser may clear it. Connect a Google Sheet to fix this — see the hosting guide.</p></div>` : ''}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="primary" onclick="setOpen(true)" ${s.open?'disabled':''}>Start the game</button>
+        <button class="danger" onclick="setOpen(false)" ${s.open?'':'disabled'}>Stop the game</button>
+        <button onclick="loadResults()">Refresh results</button>
+        <button onclick="exportCsv()">Download results (CSV)</button>
+        <button class="ghost" onclick="UI.pickClass=true;render()">Switch or add a class</button>
+        <button class="ghost" onclick="findClasses()">Find my classes</button>
+        <button class="ghost danger" onclick="if(confirm('Clear every result in this class? The class itself stays.'))clearResults()">Clear results</button>
+      </div>
+      <p class="small muted" style="margin-top:10px">Players who are mid-year when you stop the game can finish reading their screen but cannot submit another year until you start it again.</p>
+      <div class="hr"></div>
+      <div class="eyebrow">Give this to your students</div>
+      <p class="small muted" style="margin-top:6px">Class code <b>${esc(s.code)}</b>${backendLive()?'. Or send them this link, which fills everything in for them:':'. Results are not shared from this device, so collect result codes at the end.'}</p>
+      ${backendLive()?`<input type="text" readonly value="${esc(shareLink())}" onclick="this.select()" style="font-family:var(--mono);font-size:12px">
+      <button class="sm" style="margin-top:8px" onclick="navigator.clipboard&&navigator.clipboard.writeText(shareLink()).then(()=>toast('Link copied.'))">Copy the student link</button>`:''}
+      <p class="small muted" style="margin-top:8px">Storage: <b>${esc(backendName())}</b></p>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="eyebrow">Events in this run</div>
+        <p class="small muted" style="margin-top:6px">Set before players start. Changing these mid-session only affects players who begin a new run.</p>
+        ${Object.keys(evLabels).map(k=>`<label style="display:flex;gap:9px;align-items:flex-start;margin-bottom:7px;font-size:13.5px">
+          <input type="checkbox" ${ev[k]?'checked':''} onchange="toggleEvent('${k}',this.checked)" style="width:auto;margin-top:3px">
+          <span>${evLabels[k]}</span></label>`).join('')}
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Debrief counters</div>
+        <table style="margin-top:8px">
+          <tbody>
+            <tr><td>Built Saudi Arabia past 3% reach</td><td class="num">${flagPct('builtKsa')}%</td></tr>
+            <tr><td>Turned a cross-border market into a local one</td><td class="num">${flagPct('upgraded')}%</td></tr>
+            <tr><td>Shifted the roster towards micro-influencers</td><td class="num">${flagPct('microHeavy')}%</td></tr>
+            <tr><td>Ended up paying creators below the market</td><td class="num">${flagPct('underpaid')}%</td></tr>
+            <tr><td>Opened a flagship</td><td class="num">${flagPct('flagship')}%</td></tr>
+            <tr><td>Ran shops without the skill to run them</td><td class="num">${flagPct('shopsWithoutSkill')}%</td></tr>
+            <tr><td>Pushed own labels past 40% of the shelf</td><td class="num">${flagPct('ownLabelHeavy')}%</td></tr>
+            <tr><td>Entered a culturally distant market</td><td class="num">${flagPct('wentFar')}%</td></tr>
+            <tr><td>Finished in operating profit</td><td class="num">${flagPct('profitable')}%</td></tr>
+            <tr><td>Needed a shareholder rescue</td><td class="num">${flagPct('rescued')}%</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">Class results</div>
+      ${rows.length? `<table style="margin-top:10px"><thead><tr>
+        <th>Player</th><th>Progress</th><th>Revenue</th><th>Operating profit</th><th>Margin</th>
+        <th>Creators</th><th>Saudi reach</th><th>Brand partners</th><th>Shops</th><th>Value</th><th>Band</th></tr></thead><tbody>
+        ${rows.map(r=>`<tr>
+          <td>${esc(r.name)}</td>
+          <td class="num">${r.finished?'Complete':'Year '+r.year}</td>
+          <td class="num">${r.finalRevenue!=null?'$'+money(r.finalRevenue):'—'}</td>
+          <td class="num ${r.finalProfit>=0?'pos':'neg'}">${r.finalProfit!=null?sgn(r.finalProfit):'—'}</td>
+          <td class="num ${r.margin>=0?'pos':'neg'}">${r.margin!=null?r.margin.toFixed(1)+'%':'—'}</td>
+          <td class="num">${r.network!=null?r.network.toLocaleString():'—'}</td>
+          <td class="num">${r.ksaPen!=null?r.ksaPen.toFixed(2)+'%':'—'}</td>
+          <td class="num ${r.brandRel<45?'neg':''}">${r.brandRel??'—'}</td>
+          <td class="num">${r.stores??'—'}</td>
+          <td class="num"><b>${r.ev!=null?(r.ev>=1000?'$'+(r.ev/1000).toFixed(2)+'B':'$'+Math.round(r.ev)+'M'):'—'}</b></td>
+          <td>${r.grade?`<span class="tag ${r.grade==='A'?'good':r.grade==='D'?'bad':''}">${r.grade}</span>`:''}</td>
+        </tr>`).join('')}
+      </tbody></table>`
+      : `<p class="small muted" style="margin-top:8px">No results yet. Results appear here as players finish each year — press Refresh results to pull the latest.</p>`}
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow">Add a result by hand</div>
+      <p class="small muted" style="margin-top:6px">If a player's result did not come through, ask them for their result code and paste it here.</p>
+      <div style="display:flex;gap:8px"><input type="text" id="pastecode" placeholder="Paste result code"><button onclick="pasteResult()">Add</button></div>
+    </div>
+  </div>`;
+}
+function renderInstructorSetup(){
+  const yr = new Date().getFullYear();
+  root().innerHTML = `
+  <div class="mast"><div class="wrap"><div><h1>Set up a class</h1><div class="sub">Instructor</div></div></div></div>
+  <div class="wrap"><div class="grid g2"><div class="panel">
+    <div class="eyebrow">This class</div>
+    <label class="fld" style="margin-top:10px"><span>Class name</span><input type="text" id="ttl" value="Boutiqaat — Session 1"></label>
+    <label class="fld"><span>Class code players type in</span><input type="text" id="code" value="BTQ-${yr}A"></label>
+    <div class="grid g2">
+      <label class="fld"><span>Years per run</span><input type="number" id="rounds" value="6" min="3" max="8"></label>
+      <label class="fld"><span>Runs per player</span><input type="number" id="limit" value="3" min="1" max="20"></label>
+    </div>
+    <button class="primary" onclick="createSession()">Create class</button>
+    ${UI.classes.length?`<button class="ghost" onclick="UI.pickClass=true;render()">Open an existing class</button>`:''}
+    <p class="small muted" style="margin-top:12px">Use a new class code each semester. Old classes keep their results — nothing is overwritten.</p>
+  </div>
+  <div class="panel">
+    <div class="eyebrow">Where results are stored</div>
+    <p class="small muted" style="margin-top:6px">Currently: <b>${esc(backendName())}</b>. Change this only if you are hosting the file yourself — see the hosting guide.</p>
+    <label class="fld"><span>Storage</span>
+      <select id="bk" onchange="CFG.backend=this.value;saveCfg();render()">
+        ${[['auto','Automatic (Claude chat)'],['http','Shared server or Google Sheet'],['supabase','Supabase'],['offline','This browser only']]
+          .map(([v,l])=>`<option value="${v}" ${CFG.backend===v?'selected':''}>${l}</option>`).join('')}
+      </select></label>
+    ${CFG.backend==='http'?`<label class="fld"><span>Endpoint address</span><input type="text" id="api" value="${esc(CFG.api)}" placeholder="https://script.google.com/macros/s/.../exec" oninput="CFG.api=this.value;saveCfg()"></label>`:''}
+    ${CFG.backend==='supabase'?`<label class="fld"><span>Project URL</span><input type="text" id="api" value="${esc(CFG.api)}" placeholder="https://xxxx.supabase.co" oninput="CFG.api=this.value;saveCfg()"></label>
+      <label class="fld"><span>Anon key</span><input type="text" id="skey" value="${esc(CFG.key)}" oninput="CFG.key=this.value;saveCfg()"></label>`:''}
+    <button class="sm" onclick="testBackend()">Test the connection</button>
+    <p class="small muted" style="margin-top:10px">With a shared server, results arrive in your console automatically and you can run the game from any device. Without one, players finish with a result code they send you.</p>
+  </div></div>
+  <button class="ghost sm" onclick="UI.role=null;render()">Back</button></div>`;
+}
+function renderClassPicker(){
+  root().innerHTML = `
+  <div class="mast"><div class="wrap"><div><h1>Your classes</h1><div class="sub">Instructor</div></div></div></div>
+  <div class="wrap"><div class="panel">
+    <table><thead><tr><th>Class</th><th>Code</th><th>Created</th><th></th></tr></thead><tbody>
+    ${UI.classes.map(c=>`<tr><td>${esc(c.title)}</td><td class="num">${esc(c.code)}</td>
+      <td class="num">${new Date(c.created).toLocaleDateString()}</td>
+      <td><button class="sm" onclick="openClass('${esc(c.code)}')">Open</button></td></tr>`).join('')
+      || '<tr><td colspan="4" class="muted">No classes stored yet.</td></tr>'}
+    </tbody></table>
+    <div style="margin-top:12px;display:flex;gap:8px"><button onclick="UI.pickClass=false;UI.session=null;render()">Create a new class</button>
+    <button class="ghost" onclick="findClasses()">Find my classes</button>
+    <button class="ghost" onclick="UI.pickClass=false;render()">Back</button></div>
+  </div></div>`;
+}
+/* Rebuilds the class list straight from the class records on the server. */
+async function findClasses(){
+  const found = await scanClasses();
+  if(found === null){ toast('The server did not answer. Check the endpoint, or sign in again.'); return; }
+  UI.classes = found;
+  if(found.length){ await S.set(INDEX_KEY, JSON.stringify(found.slice(0,60))); }
+  toast(found.length ? found.length + ' class' + (found.length===1?'':'es') + ' found on the server.' : 'No classes found on the server.');
+  UI.pickClass = true; render();
+}
+async function openClass(code){
+  UI.cls=code; UI.pickClass=false; await loadSession(); await loadResults(true); render();
+}
+async function testBackend(){
+  const stamp='btq:selftest';
+  const ok = await S.set(stamp, String(Date.now()));
+  const back = ok ? await S.get(stamp) : null;
+  await S.del(stamp);
+  toast(back ? 'Connection works — results will be shared.' : 'No answer from that address. Check the URL and that the endpoint is deployed for public access.');
+}
+async function createSession(){
+  const code = ($('#code').value||'BTQ-1').trim().toUpperCase().replace(/[^A-Z0-9._-]/g,'-');
+  const s = {
+    title: ($('#ttl').value||'Boutiqaat class').trim(), code,
+    owner: AUTH.id,
+    rounds: Math.max(3,Math.min(8,+$('#rounds').value||6)),
+    limit: Math.max(1,Math.min(20,+$('#limit').value||3)),
+    events: Object.assign({}, DEFAULT_EVENTS),
+    open:false, created:Date.now(),
+  };
+  const existing = await S.get(sessionKey(code));
+  if(existing && !confirm('A class with the code '+code+' already exists. Replace its settings? Its results are kept.')) return;
+  NETERR.fail = false; NETERR.auth = false;
+  const saved = await S.set(sessionKey(code), JSON.stringify(s));
+  if(!saved){
+    if(NETERR.auth){ toast('Your sign-in has expired. Sign in again, then create the class.'); clearAuth(); render(); }
+    else toast('The class could not be saved. Check the endpoint address and that the backend is redeployed.');
+    return;
+  }
+  await addToIndex({code, title:s.title, created:s.created});
+  UI.cls=code; lsSet('btq:lastclass',code);
+  UI.classes=await classIndex();
+  UI.session=s; UI.results=[]; render();
+}
+async function setOpen(v){
+  UI.session.open=v; await S.set(sessionKey(UI.cls), JSON.stringify(UI.session));
+  toast(v?'Game is open. Players can start.':'Game stopped. No new years can be submitted.');
+  render();
+}
+async function toggleEvent(k,v){
+  UI.session.events[k]=v; await S.set(sessionKey(UI.cls), JSON.stringify(UI.session)); render();
+}
+async function clearResults(){
+  const items = await S.all(resPrefix(UI.cls));
+  for(const it of items) await S.del(it.key);
+  UI.results=[]; render(); toast('Results cleared for this class.');
+}
+async function deleteClass(){
+  await clearResults();
+  await S.del(sessionKey(UI.cls));
+  const ix=(await classIndex()).filter(c=>c.code!==UI.cls);
+  await S.set(INDEX_KEY, JSON.stringify(ix));
+  UI.classes=ix; UI.cls=ix[0]?ix[0].code:null; UI.session=null; UI.authed=false; UI.results=[];
+  if(UI.cls) await loadSession();
+  render();
+}
+async function loadResults(quiet){
+  const items = await S.all(resPrefix(UI.cls));
+  const out=[];
+  for(const it of items){ try{ out.push(JSON.parse(it.value)); }catch(e){} }
+  UI.results = out;
+  if(!quiet){ render(); toast(out.length+' result'+(out.length===1?'':'s')+' loaded.'); }
+}
+function exportCsv(){
+  const head=['Player','Progress','Revenue$M','OperatingProfit$M','Margin%','Cash$M','Creators','SaudiReach%','BrandPartners','Markets','Shops','Value$M','Band','BuiltSaudi','Flagship','MicroHeavy','UnderpaidCreators','OwnLabelHeavy'];
+  const lines=[head.join(',')].concat(UI.results.map(r=>[
+    '"'+r.name+'"', r.finished?'Complete':'Year '+r.year, Math.round(r.finalRevenue||0), Math.round(r.finalProfit||0),
+    (r.margin||0).toFixed(1), Math.round(r.cash||0), r.network||0, (r.ksaPen||0).toFixed(2), r.brandRel||0,
+    r.stable||0, r.stores||0, Math.round(r.ev||0), r.grade||'',
+    (r.flags&&r.flags.builtKsa)?'yes':'no', (r.flags&&r.flags.flagship)?'yes':'no',
+    (r.flags&&r.flags.microHeavy)?'yes':'no', (r.flags&&r.flags.underpaid)?'yes':'no', (r.flags&&r.flags.ownLabelHeavy)?'yes':'no'
+  ].join(',')));
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='boutiqaat-class-results.csv'; a.click();
+}
+async function pasteResult(){
+  try{
+    const obj = JSON.parse(decodeURIComponent(escape(atob($('#pastecode').value.trim()))));
+    await S.set(resPrefix(UI.cls)+slug(obj.name), JSON.stringify(obj));
+    await loadResults();
+  }catch(e){ toast('That code could not be read.'); }
+}
+
+function shareLink(){
+  // the instructor page lives at .../boutiqaat-instructor.html; students need the student page
+  const base = location.origin + location.pathname.replace(/boutiqaat-instructor\.html$/, 'boutiqaat-student.html');
+  const p = ['class=' + encodeURIComponent(UI.cls), 'backend=' + encodeURIComponent(CFG.backend)];
+  if(CFG.api) p.push('api=' + encodeURIComponent(CFG.api));
+  if(CFG.key) p.push('key=' + encodeURIComponent(CFG.key));
+  return base + '#' + p.join('&');
+}
+/* ---------------- student lobby ---------------- */
+
+/* ============================================================
+   INSTRUCTOR SIGN-IN
+   With a shared server the check happens there: the page sends a
+   username and password and gets back a short-lived token. Every
+   protected action carries it. Students never sign in at all.
+   ============================================================ */
+const AUTH = { id:null, token:null, exp:0, hasAccount:null };
+const ACC_PREFIX = 'sim:auth:';
+const DEFAULT_EVENTS = { rivalPlatform:true, ksaOpening:true, heroExit:true,
+                         brandAudit:true, rentShock:false, customs:false };
+
+function authLive(){ return CFG.backend === 'http'; }
+async function sha256(txt){
+  if(window.crypto && window.crypto.subtle){
+    const b = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
+    return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('');
+  }
+  let h = 5381; for(let i=0;i<txt.length;i++){ h = ((h<<5)+h+txt.charCodeAt(i))>>>0; }
+  return 'weak' + h.toString(16);
+}
+function saveAuth(){ lsSet('sim:session', JSON.stringify({id:AUTH.id,token:AUTH.token,exp:AUTH.exp})); }
+function loadAuth(){
+  try{ const r = JSON.parse(lsGet('sim:session') || 'null');
+    if(r && r.exp > Date.now()){ AUTH.id=r.id; AUTH.token=r.token; AUTH.exp=r.exp; } }catch(e){}
+}
+function clearAuth(){ AUTH.id=null; AUTH.token=null; AUTH.exp=0; lsDel('sim:session'); }
+function signedIn(){ return !!AUTH.token && AUTH.exp > Date.now(); }
+
+/* Tidy up a pasted address: spaces, invisible characters, a stray slash. */
+function cleanApi(v){
+  return String(v || '').replace(/[\u200B-\u200D\uFEFF]/g,'').trim().replace(/\/+$/,'');
+}
+
+/* Ask the endpoint what it is, and report precisely what came back.
+   Never fires a request when there is no address to fire it at. */
+async function probeBackend(){
+  if(!authLive()){ AUTH.reach='offline'; AUTH.detail=''; return AUTH.reach; }
+  const url = cleanApi(CFG.api);
+  if(!url){ AUTH.reach='blank'; AUTH.detail='No address has been entered yet.'; return AUTH.reach; }
+  if(!/^https?:\/\//i.test(url)){ AUTH.reach='badurl'; AUTH.detail='The address must start with https://'; return AUTH.reach; }
+
+  let j = null, how = '';
+  try{ j = await fetchCall({action:'status'}); how='direct'; TRANSPORT.mode='fetch'; }
+  catch(e1){
+    if(e1 && e1.body !== undefined){
+      /* The endpoint did reply, just not with data. That is a different problem
+         from being blocked, and it has a different fix. */
+      const looksLikeLogin = /accounts\.google|Sign in|<HTML|<!DOCTYPE/i.test(e1.body || '');
+      AUTH.reach = 'notjson';
+      AUTH.detail = 'HTTP ' + (e1.status || '?') + '. The endpoint replied with a web page rather than data'
+        + (looksLikeLogin ? ', which means it is asking for a Google sign-in. Redeploy with "Who has access: Anyone".'
+                          : '. Check the address ends in /exec.')
+        + (e1.body ? ' First characters: ' + String(e1.body).slice(0,60).replace(/\s+/g,' ') : '');
+      return AUTH.reach;
+    }
+    try{ j = await jsonpCall({action:'status'}); how='fallback'; TRANSPORT.mode='jsonp'; }
+    catch(e2){
+      let reachable=false;
+      try{ await fetch(url,{mode:'no-cors'}); reachable=true; }catch(e3){}
+      AUTH.reach='blocked'; AUTH.reachable=reachable;
+      AUTH.detail = reachable
+        ? 'The address answers, but this browser is not allowed to read the reply, and the fallback route was blocked too. '
+          + 'That is usually a privacy extension or a campus firewall blocking script.google.com.'
+        : 'Nothing answered at that address. Check it is the Web app URL ending in /exec, that the deployment is set to '
+          + '"Who has access: Anyone", and that you are online.';
+      return AUTH.reach;
+    }
+  }
+  if(!j || typeof j !== 'object'){ AUTH.reach='notjson'; AUTH.detail='The endpoint replied with something that was not data.'; return AUTH.reach; }
+  AUTH.serverVersion = j.version || 1;
+  AUTH.hasAccount = !!j.hasAccount;
+  if(AUTH.serverVersion >= 2){
+    AUTH.reach='ok';
+    AUTH.detail='Connected' + (how==='fallback' ? ' using the fallback route, because the direct one was blocked. Everything works normally.' : '.')
+      + ' ' + (AUTH.hasAccount ? 'An instructor account already exists here \u2014 sign in with it.' : 'No account yet, so create one below.');
+  } else {
+    AUTH.reach='old';
+    AUTH.detail='It answered, but with an older backend. Paste in the current backend file and publish a new version.';
+  }
+  return AUTH.reach;
+}
+
+async function authStatus(){
+  if(AUTH.hasAccount !== null && AUTH.reach) return AUTH.hasAccount;
+  await probeBackend();
+  if(!authLive()) AUTH.hasAccount = !!(await S.get(ACC_PREFIX + 'index'));
+  if(AUTH.hasAccount === null) AUTH.hasAccount = false;
+  return AUTH.hasAccount;
+}
+
+function clearProbe(){ const e=document.getElementById('probe'); if(e) e.innerHTML=''; }
+async function testConnection(){
+  CFG.api = cleanApi(CFG.api); saveCfg();
+  AUTH.hasAccount = null; AUTH.reach = null;
+  const el = document.getElementById('probe');
+  if(el) el.innerHTML = '<span class="tag">Checking…</span>';
+  await probeBackend();
+  render();
+}
+function backendProblem(){
+  if(!authLive()) return null;
+  if(AUTH.reach === 'old') return { tone:'bad', head:'The backend is out of date',
+    body:'It answered, but with the old code that has no sign-in. In the Apps Script editor paste in the current '
+       + 'backend file, then choose Deploy \u2192 Manage deployments \u2192 pencil \u2192 Version: New version \u2192 Deploy.' };
+  if(AUTH.reach === 'blocked') return { tone:'bad', head:'The browser could not reach that address', body:AUTH.detail };
+  if(AUTH.reach === 'notjson') return { tone:'bad', head:'That address answered, but not with data', body:AUTH.detail };
+  if(AUTH.reach === 'badurl') return { tone:'bad', head:'That does not look like a web address', body:AUTH.detail };
+  if(AUTH.reach === 'ok')   return { tone:'good', head:'Connected', body:AUTH.detail };
+  return null;   // nothing entered yet, or not checked yet - say nothing
+}
+async function authRegister(id, password){
+  id = String(id||'').trim().toLowerCase();
+  if(id.length < 3) return {ok:false, error:'Username must be at least 3 characters.'};
+  if(String(password||'').length < 6) return {ok:false, error:'Password must be at least 6 characters.'};
+  if(authLive()){
+    const j = await jpost({action:'register', id, password, token:AUTH.token});
+    if(j && j.ok){ AUTH.id=j.id; AUTH.token=j.token; AUTH.exp=j.exp; AUTH.hasAccount=true; saveAuth(); return {ok:true}; }
+    if(j && j.error === 'unknown action') return {ok:false, error:'This endpoint is running the old backend. Redeploy it, then try again.'};
+    return {ok:false, error:(j && j.error) || 'Could not reach the server. Check the endpoint address.'};
+  }
+  const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  await S.set(ACC_PREFIX + id, JSON.stringify({salt, hash: await sha256(salt+'|'+password)}));
+  await S.set(ACC_PREFIX + 'index', id);
+  AUTH.id=id; AUTH.token='local-'+id; AUTH.exp=Date.now()+12*3600*1000; AUTH.hasAccount=true; saveAuth();
+  return {ok:true};
+}
+async function authLogin(id, password){
+  id = String(id||'').trim().toLowerCase();
+  if(authLive()){
+    const j = await jpost({action:'login', id, password});
+    if(j && j.ok){ AUTH.id=j.id; AUTH.token=j.token; AUTH.exp=j.exp; saveAuth(); return {ok:true}; }
+    if(j && j.error === 'unknown action') return {ok:false, error:'This endpoint is running the old backend. Redeploy it, then try again.'};
+    return {ok:false, error:(j && j.error) || 'Could not reach the server.'};
+  }
+  const v = await S.get(ACC_PREFIX + id);
+  if(!v) return {ok:false, error:'Wrong username or password.'};
+  let acc; try{ acc = JSON.parse(v); }catch(e){ return {ok:false, error:'Account record is damaged.'}; }
+  if(await sha256(acc.salt+'|'+password) !== acc.hash) return {ok:false, error:'Wrong username or password.'};
+  AUTH.id=id; AUTH.token='local-'+id; AUTH.exp=Date.now()+12*3600*1000; saveAuth();
+  return {ok:true};
+}
+/* A sign-in remembered in this browser is confirmed with the server before
+   the console is shown. A stale or tampered token is discarded. */
+async function verifyAuth(){
+  if(!signedIn()) return false;
+  if(!authLive()) return true;                 // nothing to check against
+  try{
+    const j = await jpost({ action:'check', token: AUTH.token });
+    if(j && j.ok === false && j.error !== 'unknown action'){ clearAuth(); return false; }
+  }catch(e){}                                   // a network blip should not sign you out
+  return signedIn();
+}
+async function authLogout(){
+  if(authLive() && AUTH.token){ try{ await jpost({action:'logout', token:AUTH.token}); }catch(e){} }
+  clearAuth(); UI.session=null; UI.results=[]; UI.pickClass=false; UI.authMode=null; render();
+}
+
+async function boot(){
+  loadCfg(); loadAuth();
+  render();
+  if(signedIn()) await verifyAuth();
+  if(signedIn()){
+    UI.classes = await classIndex();
+    UI.cls = CFG.cls || lsGet('btq:lastclass') || (UI.classes[0] && UI.classes[0].code) || null;
+    if(UI.cls){ await loadSession(); await loadResults(true); }
+    render();
+  } else {
+    if(authLive() && cleanApi(CFG.api)) authStatus().then(() => render());
+    else { AUTH.reach = authLive() ? 'blank' : 'offline'; AUTH.hasAccount = authLive() ? null : AUTH.hasAccount; render(); }
+  }
+}
+async function loadSession(){
+  if(!UI.cls){ UI.session = null; return; }
+  const v = await S.get(sessionKey(UI.cls));
+  try{ UI.session = v ? JSON.parse(v) : null; }catch(e){ UI.session = null; }
+  if(UI.session) lsSet('btq:lastclass', UI.cls);
+}
+function render(){
+  if(!signedIn()) return renderSignIn();
+  if(UI.pickClass) return renderClassPicker();
+  if(!UI.session) return renderInstructorSetup();
+  return renderInstructor();
+}
+
+function renderSignIn(){
+  const mode = UI.authMode || (AUTH.hasAccount === false ? 'create' : 'login');
+  root().innerHTML = `
+  <div class="mast"><div class="wrap">
+    <div><h1>Boutiqaat: The Influence Game</h1><div class="sub">Instructor sign in</div></div>
+  </div></div>
+  <div class="wrap"><div class="panel" style="max-width:470px">
+    ${mode === 'create' ? `
+      <div class="eyebrow">First time here</div>
+      <h2 style="margin:6px 0 10px">Set up the instructor account</h2>
+      <p class="small muted">Choose the username and password you will use to run classes. One account is enough; you can add colleagues later.</p>
+      ${authLive() ? '' : `<div class="panel tight" style="background:#FBF0DC;border-color:#E8D3A8"><span class="tag warn">No server connected</span>
+        <p class="small" style="margin:8px 0 0">Without a shared server the password is only checked inside this browser. Connect a server first if that matters.</p></div>`}
+      <label class="fld"><span>Where results are stored</span>
+        <select onchange="CFG.backend=this.value;saveCfg();AUTH.hasAccount=null;render()">
+          ${[['http','Shared server or Google Sheet'],['supabase','Supabase'],['offline','This browser only']]
+            .map(([v,l]) => `<option value="${v}" ${CFG.backend===v?'selected':''}>${l}</option>`).join('')}
+        </select></label>
+      ${CFG.backend==='http' ? `<label class="fld"><span>Endpoint address</span>
+        <input type="text" id="apiin" value="${esc(CFG.api)}" placeholder="https://script.google.com/macros/s/.../exec"
+          oninput="CFG.api=this.value;saveCfg();AUTH.hasAccount=null;AUTH.reach=null;clearProbe()"
+          onchange="testConnection()"></label>
+        <button class="sm" onclick="testConnection()" style="margin-bottom:10px">Test the connection</button>` : ''}
+      ${CFG.backend==='supabase' ? `<label class="fld"><span>Project URL</span><input type="text" value="${esc(CFG.api)}" oninput="CFG.api=this.value;saveCfg()"></label>
+        <label class="fld"><span>Anon key</span><input type="text" value="${esc(CFG.key)}" oninput="CFG.key=this.value;saveCfg()"></label>` : ''}
+      <label class="fld"><span>Username</span><input type="text" id="aid" autocomplete="username"></label>
+      <label class="fld"><span>Password</span><input type="password" id="apw" autocomplete="new-password"></label>
+      <label class="fld"><span>Confirm password</span><input type="password" id="apw2" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></label>
+      <button class="primary" onclick="doRegister()">Create the account</button>
+      <button class="ghost" onclick="UI.authMode='login';render()">I already have one</button>
+    ` : `
+      <div class="eyebrow">Instructor</div>
+      <h2 style="margin:6px 0 10px">Sign in</h2>
+      <label class="fld"><span>Username</span><input type="text" id="aid" autocomplete="username" value="${esc(AUTH.id||'')}"></label>
+      <label class="fld"><span>Password</span><input type="password" id="apw" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></label>
+      <button class="primary" onclick="doLogin()">Sign in</button>
+      <button class="ghost" onclick="UI.authMode='create';render()">Set up an account</button>
+    `}
+    <div id="probe">${(() => { const b = backendProblem(); return b ? `<div class="panel tight" style="margin-top:10px;background:${b.tone==='good'?'#E2F2EE':'#FAE7E5'};border-color:${b.tone==='good'?'#A9D8CC':'#E7BDB8'}">
+      <span class="tag ${b.tone==='good'?'good':'bad'}">${esc(b.head)}</span>
+      <p class="small" style="margin:8px 0 0">${esc(b.body)}</p>
+      ${(b.tone !== 'good' && cleanApi(CFG.api)) ? `<p class="small" style="margin:10px 0 0">
+        <b>One step settles it:</b> <a href="${esc(cleanApi(CFG.api))}?action=status" target="_blank" rel="noopener">open the address in a new tab</a>.
+        If a line of data appears that includes <code>"version":2</code>, the endpoint is fine and something in this browser is blocking it.
+        If a Google sign-in page appears, the deployment is not public.</p>` : ''}
+      </div>` : ''; })()}</div>
+    <div id="autherr" class="small neg" style="margin-top:10px"></div>
+    <div class="hr"></div>
+    <p class="small muted">Students do not use this page. Send them the student link instead.</p>
+    <p class="small muted">Storage: ${esc(backendName())}</p>
+    ${(!authLive()) ? `<div class="panel tight" style="background:#FBF0DC;border-color:#E8D3A8;margin-top:6px">
+      <p class="small" style="margin:0"><b>Nothing is connected.</b> Your account, your classes and your results would live only
+      in this browser, and browsers clear that data on their own after a while. Choose
+      <b>Shared server or Google Sheet</b> above and paste your endpoint address.</p></div>` : ''}
+  </div></div>`;
+}
+async function doRegister(){
+  if(authLive() && AUTH.reach !== 'ok'){ await probeBackend(); if(AUTH.reach !== 'ok'){ render(); return; } }
+  const id = $('#aid').value, pw = $('#apw').value, pw2 = $('#apw2').value;
+  if(pw !== pw2){ $('#autherr').textContent = 'The two passwords do not match.'; return; }
+  const r = await authRegister(id, pw);
+  if(r.ok){ UI.authMode=null; UI.classes = await classIndex(); render(); toast('Account created. You are signed in.'); }
+  else $('#autherr').textContent = r.error;
+}
+async function doLogin(){
+  if(authLive() && AUTH.reach !== 'ok'){ await probeBackend(); if(AUTH.reach !== 'ok'){ render(); return; } }
+  const btn = document.querySelector('.primary');
+  if(btn){ btn.disabled = true; btn.textContent = 'Signing in…'; }
+  const r = await authLogin($('#aid').value, $('#apw').value);
+  if(r.ok){
+    UI.authMode = null; UI.classes = await classIndex();
+    if(UI.classes.length){ UI.cls = UI.classes[0].code; await loadSession(); await loadResults(true); }
+    render(); toast('Signed in.');
+  } else {
+    if(btn){ btn.disabled = false; btn.textContent = 'Sign in'; }
+    $('#autherr').textContent = r.error;
+  }
+}
+
+boot();
+
+</script>
+</body>
+</html>
